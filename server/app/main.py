@@ -1,0 +1,35 @@
+"""FastAPI application entrypoint.
+
+Health lives at both `/health` (Docker healthcheck, internal) and
+`/api/v1/health` (browser via the Caddy `/api/*` proxy → PWA connectivity check).
+"""
+from __future__ import annotations
+
+from fastapi import APIRouter, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from .config import settings
+from .routers import auth, clients, health, produits, symptomes, utilisateurs
+
+app = FastAPI(title="QC Level 1 API", version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Container-internal liveness probe.
+app.include_router(health.router)
+
+# Versioned API surface (everything the browser reaches via /api/*).
+api = APIRouter(prefix="/api/v1")
+api.include_router(health.router)
+api.include_router(auth.router)
+api.include_router(clients.router)
+api.include_router(produits.router)
+api.include_router(utilisateurs.router)
+api.include_router(symptomes.router)
+app.include_router(api)
