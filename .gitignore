@@ -16,6 +16,7 @@ server/.venv/
 
 # ─ Node / web ──────────────────────────────────────────────
 node_modules/
+.pnpm-store/
 web/dist/
 web/dev-dist/
 *.tsbuildinfo
@@ -27,6 +28,9 @@ web/dev-dist/
 # ─ Docker / Caddy state ────────────────────────────────────
 caddy_data/
 caddy_config/
+
+# ─ Dev container ───────────────────────────────────────────
+.devcontainer/devcontainer-lock.json
 
 # ─ Editors / OS ────────────────────────────────────────────
 .vscode/
