@@ -22,8 +22,6 @@ from ..config import settings
 from ..models import PushSubscription, Utilisateur
 
 logger = logging.getLogger(__name__)
-
-VAPID_CLAIMS_EMAIL = "mailto:admin@pmp.local"
 _VAPID_PATH = Path("/data/vapid.json")
 _DEV_VAPID_PATH = Path("/tmp/vapid_dev.json")
 
@@ -107,7 +105,7 @@ class VapidSender:
                 },
                 data=json.dumps(payload),
                 vapid_private_key=_get_private_key(),
-                vapid_claims={"sub": VAPID_CLAIMS_EMAIL},
+                vapid_claims={"sub": settings.vapid_claims_email},
             )
         except Exception as exc:
             # Best-effort — never let a push failure block the request.

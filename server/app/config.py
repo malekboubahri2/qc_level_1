@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     # Comma-separated; same-origin in prod (Caddy), explicit for `pnpm dev`.
     cors_origins: str = "http://localhost:5173,https://localhost"
 
+    # ── Web Push (Phase 2) ─────────────────────────────────────────────────
+    # VAPID sub claim — identifies the push operator to the push gateway.
+    # Use the site admin email for production.
+    vapid_claims_email: str = "mailto:admin@localhost"
+
     # ── Seed (dev convenience; override the secret via env in prod) ────────
     admin_nom: str = "admin"
     admin_secret: str = "admin"
