@@ -12,6 +12,8 @@ dependencies = [
     "pydantic-settings>=2.3",
     "argon2-cffi>=23.1",
     "pyjwt>=2.8",
+    "pywebpush>=2.3.0",
+    "fpdf2>=2.8.7",
 ]
 
 [project.optional-dependencies]

@@ -12,7 +12,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
-from .routers import alertes, auth, clients, events, health, produits, suivis, symptomes, utilisateurs
+from .routers import alertes, auth, clients, events, export, health, kpis, produits, push, suivis, symptomes, utilisateurs
 from .services.scheduler import expire_alertes_loop
 
 
@@ -48,4 +48,7 @@ api.include_router(symptomes.router)
 api.include_router(suivis.router)
 api.include_router(alertes.router)
 api.include_router(events.router)
+api.include_router(push.router)
+api.include_router(kpis.router)
+api.include_router(export.router)
 app.include_router(api)
