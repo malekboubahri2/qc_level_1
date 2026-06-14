@@ -10,8 +10,8 @@ from sqlalchemy.pool import StaticPool
 
 from app.db import get_db
 from app.main import app
-from app.models import Base, Utilisateur
-from app.models.enums import Role
+from app.models import Base, Client, Produit, SymptomeCatalogue, Utilisateur
+from app.models.enums import Role, TypeTraitement
 from app.security import hash_secret
 
 
@@ -46,6 +46,19 @@ def client() -> Iterator[TestClient]:
             ),
             Utilisateur(
                 nom="insp", role=Role.inspecteur, secret_hash=hash_secret("insp-secret"), actif=True
+            ),
+            Utilisateur(
+                nom="meth", role=Role.methode, secret_hash=hash_secret("meth-secret"), actif=True
+            ),
+            Client(code="CLI1", nom="Client Test", actif=True),
+            Produit(
+                reference="REF001",
+                libelle="Produit Test",
+                type_traitement=TypeTraitement.peinture,
+                actif=True,
+            ),
+            SymptomeCatalogue(
+                code="POUSSIERE", libelle_fr="Poussière", famille="surface", ordre=1, actif=True
             ),
         ]
     )

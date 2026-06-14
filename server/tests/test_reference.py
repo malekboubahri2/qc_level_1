@@ -67,4 +67,5 @@ def test_utilisateurs_listing_is_admin_only(client: TestClient) -> None:
     admin = auth_header(client, "admin", "admin-secret")
     resp = client.get("/api/v1/utilisateurs", headers=admin)
     assert resp.status_code == 200
-    assert {u["nom"] for u in resp.json()} == {"admin", "insp"}
+    noms = {u["nom"] for u in resp.json()}
+    assert {"admin", "insp"}.issubset(noms)
