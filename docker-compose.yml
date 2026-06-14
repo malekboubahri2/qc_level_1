@@ -1,0 +1,39 @@
+# QC Level 1 (PMP) — full stack behind Caddy.
+#   docker compose up --build
+# Reads variables from .env (see .env.example). Same compose file for dev and
+# prod; only the .env differs (tech-stack.md).
+
+services:
+  api:
+    build: ./server
+    environment:
+      QC_DATABASE_URL: sqlite:////data/qc_level1.db
+      QC_SECRET_KEY: ${QC_SECRET_KEY:?set QC_SECRET_KEY in .env}
+      QC_CORS_ORIGINS: ${QC_CORS_ORIGINS:-https://localhost}
+      QC_ALERTE_TIMEOUT_SECONDS: ${QC_ALERTE_TIMEOUT_SECONDS:-120}
+      QC_ADMIN_NOM: ${QC_ADMIN_NOM:-admin}
+      QC_ADMIN_SECRET: ${QC_ADMIN_SECRET:?set QC_ADMIN_SECRET in .env}
+    volumes:
+      - qc_data:/data
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  qc_data:
+  caddy_data:
+  caddy_config:
