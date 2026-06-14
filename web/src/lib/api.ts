@@ -252,18 +252,38 @@ export const api = {
 
   utilisateurs: {
     list: () => request<UtilisateurRead[]>('/utilisateurs'),
+    create: (body: { nom: string; role: string; secret: string; telephone?: string; actif?: boolean }) =>
+      request<UtilisateurRead>('/utilisateurs', { method: 'POST', body }),
+    update: (id: number, body: { nom?: string; role?: string; secret?: string; telephone?: string; actif?: boolean }) =>
+      request<UtilisateurRead>(`/utilisateurs/${id}`, { method: 'PATCH', body }),
+    delete: (id: number) => request<void>(`/utilisateurs/${id}`, { method: 'DELETE' }),
   },
 
   clients: {
     list: () => request<ClientRead[]>('/clients'),
+    create: (body: { code: string; nom: string; actif?: boolean }) =>
+      request<ClientRead>('/clients', { method: 'POST', body }),
+    update: (id: number, body: { code?: string; nom?: string; actif?: boolean }) =>
+      request<ClientRead>(`/clients/${id}`, { method: 'PATCH', body }),
+    delete: (id: number) => request<void>(`/clients/${id}`, { method: 'DELETE' }),
   },
 
   produits: {
     list: () => request<ProduitRead[]>('/produits'),
+    create: (body: { reference: string; libelle: string; client_id?: number | null; type_traitement?: string; actif?: boolean }) =>
+      request<ProduitRead>('/produits', { method: 'POST', body }),
+    update: (id: number, body: { reference?: string; libelle?: string; client_id?: number | null; type_traitement?: string; actif?: boolean }) =>
+      request<ProduitRead>(`/produits/${id}`, { method: 'PATCH', body }),
+    delete: (id: number) => request<void>(`/produits/${id}`, { method: 'DELETE' }),
   },
 
   symptomes: {
     list: () => request<SymptomeRead[]>('/symptomes'),
+    create: (body: { code: string; libelle_fr: string; libelle_ar?: string; famille?: string; ordre?: number; actif?: boolean }) =>
+      request<SymptomeRead>('/symptomes', { method: 'POST', body }),
+    update: (id: number, body: { code?: string; libelle_fr?: string; libelle_ar?: string; famille?: string; ordre?: number; actif?: boolean }) =>
+      request<SymptomeRead>(`/symptomes/${id}`, { method: 'PATCH', body }),
+    delete: (id: number) => request<void>(`/symptomes/${id}`, { method: 'DELETE' }),
   },
 
   suivis: {
