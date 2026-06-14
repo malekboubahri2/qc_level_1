@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Brand teal ────────────────────────────────────────── */
+  --color-brand:      #1A5560;
+  --color-brand-dark: #134349;
+  --color-brand-deep: #0E353C;
+
+  /* ── Accent gold ───────────────────────────────────────── */
+  --color-accent:       #D4B765;
+  --color-accent-light: #E4CD8B;
+
+  /* ── Surfaces ──────────────────────────────────────────── */
+  --color-cream:        #FAEEE3;
+  --color-cream-subtle: #F5E8DC;
+  --color-cream-sub:    #F5E8DC;   /* alias matching HTML reference */
+
+  /* ── Semantic status ───────────────────────────────────── */
+  --color-success: #2E7D5B;
+  --color-warning: #C89238;
+  --color-danger:  #B84545;
+  --color-info:    #3E7B86;
+
+  /* ── Text ──────────────────────────────────────────────── */
+  --color-ink:         #2D2D2D;
+  --color-ink-heading: #1A5560;
+  --color-ink-head:    #1A5560;    /* alias matching HTML reference */
+  --color-ink-inverse: #FAEEE3;
+  --color-ink-inv:     #FAEEE3;    /* alias matching HTML reference */
+  --color-ink-muted:   #6B6B6B;
+
+  /* ── Typography ────────────────────────────────────────── */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  /* ── Brand-tinted shadows ──────────────────────────────── */
+  --shadow-card:     0 1px 3px rgba(26, 85, 96, 0.08), 0 1px 2px rgba(26, 85, 96, 0.04);
+  --shadow-rest:     0 1px 3px rgba(26, 85, 96, 0.08), 0 1px 2px rgba(26, 85, 96, 0.04);
+  --shadow-elevated: 0 4px 12px rgba(26, 85, 96, 0.12);
+  --shadow-elev:     0 4px 12px rgba(26, 85, 96, 0.12);
+  --shadow-popover:  0 8px 24px rgba(26, 85, 96, 0.15);
+
+  /* ── Border radii (matching HTML reference) ────────────── */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-full: 999px;
+
+  /* ── Letter-spacing (from HTML reference exact values) ─── */
+  --tracking-tightish: -0.005em;   /* station-name, panel headings */
+  --tracking-tighter:  -0.01em;    /* h1 page-title */
+  --tracking-tightest: -0.02em;    /* big-stat numbers */
+  --tracking-wide:      0.02em;    /* pills, meta-pill, ref-pill */
+  --tracking-wider:     0.08em;    /* breadcrumb, section labels, timestamps */
+}
+
+/* ── shadcn/ui CSS variable bridge ─────────────────────────── */
+:root {
+  --background: #FAEEE3;
+  --foreground: #2D2D2D;
+  --card: #FFFFFF;
+  --card-foreground: #2D2D2D;
+  --popover: #FFFFFF;
+  --popover-foreground: #2D2D2D;
+  --primary: #1A5560;
+  --primary-foreground: #FAEEE3;
+  --secondary: #F5E8DC;
+  --secondary-foreground: #1A5560;
+  --muted: #F5E8DC;
+  --muted-foreground: #6B6B6B;
+  --accent: #D4B765;
+  --accent-foreground: #0E353C;
+  --destructive: #B84545;
+  --destructive-foreground: #FAEEE3;
+  --border: #F5E8DC;
+  --input: #F5E8DC;
+  --ring: #D4B765;
+  --radius: 0.5rem;
+}
+
+/* ── Base ──────────────────────────────────────────────────── */
+/* These MUST live in @layer base. Tailwind v4 emits utilities in
+   @layer utilities, and per the cascade-layers spec unlayered rules beat
+   layered ones regardless of specificity. An *unlayered* `* { margin:0;
+   padding:0 }` therefore silently overrode every p-*/m-*/px-* utility to zero
+   — which is why spacing edits had no visible effect (sidebar icon/label
+   touching via dead ml-3, content flush against the sidebar and card edges).
+   Inside @layer base, utilities correctly take precedence. */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: #FAEEE3;
+    color: #2D2D2D;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: #1A5560;
+  }
+
+  /* Gold focus ring (brand signature) */
+  *:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #FAEEE3, 0 0 0 4px #D4B765;
+    border-radius: 0.375rem;
+  }
+}
+
+/* ── Monospace + tabular number utilities ───────────────────── */
+@utility mono {
+  font-family: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-feature-settings: "tnum" 1;
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Livepulse animation (meta-pill green dot) ──────────────── */
+@keyframes livepulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(46, 125, 91, 0.18); }
+  50%       { box-shadow: 0 0 0 6px rgba(46, 125, 91, 0.00); }
+}
+
+@utility animate-livepulse {
+  animation: livepulse 2.2s ease-in-out infinite;
+}
+
+/* ── Card-flash animation (highlight a newly arrived row/item) ─ */
+@keyframes card-flash {
+  0% {
+    background-color: #FFF6E8;
+    box-shadow: 0 0 0 1px rgba(212, 183, 101, 0.30);
+  }
+  100% {
+    background-color: var(--color-white, #FFFFFF);
+    box-shadow: 0 1px 3px rgba(26, 85, 96, 0.08), 0 1px 2px rgba(26, 85, 96, 0.04);
+  }
+}
+
+@utility animate-card-flash {
+  animation: card-flash 1000ms ease-out;
+}
+
+/* ── Deterministic glyph background palette (12 muted tones) ── */
+/* Hash function selects by: charCode(first-letter) % 12        */
+@utility glyph-bg-0  { background-color: #5e7d8a; }
+@utility glyph-bg-1  { background-color: #6f9a8a; }
+@utility glyph-bg-2  { background-color: #7a8a9a; }
+@utility glyph-bg-3  { background-color: #8c7a72; }
+@utility glyph-bg-4  { background-color: #9a8a6f; }
+@utility glyph-bg-5  { background-color: #a06f8a; }
+@utility glyph-bg-6  { background-color: #7a9a8a; }
+@utility glyph-bg-7  { background-color: #9a7a6f; }
+@utility glyph-bg-8  { background-color: #8a6f9a; }
+@utility glyph-bg-9  { background-color: #8a9a6f; }
+@utility glyph-bg-10 { background-color: #6f8a9a; }
+@utility glyph-bg-11 { background-color: #9a6f7a; }
+
+/* ── Scrollbar styling ─────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F5E8DC;
+}
+::-webkit-scrollbar-thumb {
+  background: #1A556066;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #1A5560;
+}
+
+/* ── Fluid typography (scales with the viewport, clamped) ─────── */
+/* For kiosk/large-display surfaces: phones → wall tablets without breakpoints. */
+@utility text-fluid-sm      { font-size: clamp(0.82rem, 1.4vw, 0.95rem);  line-height: 1.4; }
+@utility text-fluid-base    { font-size: clamp(0.95rem, 1.9vw, 1.15rem);  line-height: 1.45; }
+@utility text-fluid-lg      { font-size: clamp(1.1rem, 2.6vw, 1.45rem);   line-height: 1.3; }
+@utility text-fluid-xl      { font-size: clamp(1.35rem, 3.4vw, 2rem);     line-height: 1.2; }
+@utility text-fluid-2xl     { font-size: clamp(1.7rem, 4.4vw, 2.6rem);    line-height: 1.15; }
+@utility text-fluid-display { font-size: clamp(3rem, 11vw, 6rem);         line-height: 1; letter-spacing: -0.02em; }
+
+/* ── Entrance / interaction animations ───────────────────────── */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes pop-in {
+  0%   { opacity: 0; transform: scale(0.8); }
+  60%  { opacity: 1; transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@utility animate-fade-in-up { animation: fade-in-up 360ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@utility animate-scale-in   { animation: scale-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@utility animate-pop-in     { animation: pop-in 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Staggered children: set `--stagger` on each item (e.g. inline index*40ms). */
+@utility stagger-item {
+  animation: fade-in-up 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--stagger, 0ms);
+}
+
+/* Respect users who prefer less motion — kill the decorative entrances only
+   (spinners and functional animations keep working). */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-scale-in,
+  .animate-pop-in,
+  .stagger-item {
+    animation: none !important;
+  }
+}
+
+/* ── Print (quality report) ────────────────────────────────── */
+@media print {
+  @page { margin: 1.4cm; }
+  body { background: #fff; }
+}
+/* Force the brand bars/fills to render when printing/saving as PDF. */
+.report-sheet,
+.report-sheet * {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
