@@ -1,0 +1,36 @@
+# ─ Python / server ─────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+server/.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ─ Databases (state lives in a volume, never in git) ───────
+*.db
+*.db-wal
+*.db-shm
+*.sqlite3
+
+# ─ Node / web ──────────────────────────────────────────────
+node_modules/
+web/dist/
+web/dev-dist/
+*.tsbuildinfo
+
+# ─ Secrets & env (document keys in .env.example only) ──────
+.env
+*.local
+
+# ─ Docker / Caddy state ────────────────────────────────────
+caddy_data/
+caddy_config/
+
+# ─ Editors / OS ────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
