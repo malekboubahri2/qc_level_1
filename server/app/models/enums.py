@@ -18,3 +18,26 @@ class TypeTraitement(str, enum.Enum):
     peinture = "peinture"
     metallisation = "metallisation"
     les_deux = "les_deux"
+
+
+class Resultat(str, enum.Enum):
+    OK = "OK"
+    NOK = "NOK"
+
+
+class Severite(str, enum.Enum):
+    normale = "normale"
+    urgente = "urgente"
+
+
+class StatutAlerte(str, enum.Enum):
+    ouverte = "ouverte"
+    acquittee = "acquittee"
+    cloturee = "cloturee"
+    expiree = "expiree"
+
+
+class TypeVisa(str, enum.Enum):
+    qualite = "qualite"
+    prod = "prod"
+    methode = "methode"

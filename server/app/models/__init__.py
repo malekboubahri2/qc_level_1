@@ -1,13 +1,10 @@
-"""Model registry. Importing this package populates `Base.metadata` with every
-table, which Alembic's `env.py` targets for autogenerate/verification.
-
-Phase 0 ships the reference entities only. Operational tables (suivi, alerte,
-decision, visa, push_subscription) arrive in later phases via new migrations.
-"""
+"""Model registry — every import here registers the table with Base.metadata."""
+from .alerte import Alerte, Decision
 from .base import Base, TimestampMixin, utcnow
 from .client import Client
-from .enums import Role, TypeTraitement
+from .enums import Resultat, Role, Severite, StatutAlerte, TypeTraitement, TypeVisa
 from .produit import Produit
+from .suivi import SuiviQualiteProd, SuiviSymptome, Visa
 from .symptome import SymptomeCatalogue
 from .utilisateur import Utilisateur
 
@@ -19,6 +16,15 @@ __all__ = [
     "Produit",
     "Utilisateur",
     "SymptomeCatalogue",
+    "SuiviQualiteProd",
+    "SuiviSymptome",
+    "Visa",
+    "Alerte",
+    "Decision",
     "Role",
     "TypeTraitement",
+    "Resultat",
+    "Severite",
+    "StatutAlerte",
+    "TypeVisa",
 ]
