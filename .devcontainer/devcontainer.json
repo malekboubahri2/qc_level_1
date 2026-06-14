@@ -1,0 +1,46 @@
+{
+  // QC Level 1 (PMP) — one dev container for the whole stack and the single
+  // source of truth for the dev toolchain (dev-environment.md). Reopen the repo
+  // in this container and run dev/test/build/lint here, not on the host.
+  //
+  // Python 3.11 + uv come from the Dockerfile (aligned with the deploy image);
+  // Node 22 + the Docker CLI come from features; pnpm comes from corepack.
+  "name": "QC Level 1 (PMP) — Dev",
+  "build": { "dockerfile": "Dockerfile" },
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+
+  "forwardPorts": [8000, 5173],
+  "portsAttributes": {
+    "8000": { "label": "API (FastAPI)", "onAutoForward": "notify" },
+    "5173": { "label": "Web (Vite dev)", "onAutoForward": "openPreview" }
+  },
+
+  // Installs project dependencies only (the toolchain itself is in the image).
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "remoteUser": "vscode",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "${workspaceFolder}/server/.venv/bin/python",
+        "python.terminal.activateEnvironment": false,
+        "files.eol": "\n",
+        "editor.formatOnSave": true
+      }
+    }
+  }
+}
