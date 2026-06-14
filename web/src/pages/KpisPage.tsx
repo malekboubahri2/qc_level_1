@@ -4,6 +4,7 @@ import {
   LineChart, Line, BarChart, Bar, ScatterChart, Scatter,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
+import { AppLayout } from '../components/AppLayout'
 import { api } from '../lib/api'
 import { t } from '../lib/i18n'
 
@@ -52,7 +53,8 @@ export function KpisPage() {
   }
 
   return (
-    <div className="p-4 space-y-8 max-w-5xl mx-auto">
+    <AppLayout title={t('page.kpis')}>
+    <div className="space-y-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-2xl font-bold text-primary">{t('kpis.titre')}</h1>
         <div className="flex items-center gap-3">
@@ -175,5 +177,6 @@ export function KpisPage() {
         </p>
       </section>
     </div>
+    </AppLayout>
   )
 }

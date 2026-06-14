@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Users, Building2, Package, AlertTriangle, Plus } from 'lucide-react'
+import { AppLayout } from '../components/AppLayout'
 import { api } from '../lib/api'
+import { t } from '../lib/i18n'
 import type { UtilisateurRead, ClientRead, ProduitRead, SymptomeRead } from '../lib/api'
 
 // ── Primitives ────────────────────────────────────────────────────────────────
@@ -440,7 +442,8 @@ type TabId = typeof TABS[number]['id']
 export function AdminPage() {
   const [tab, setTab] = useState<TabId>('utilisateurs')
   return (
-    <div className="px-6 md:px-8 py-6 space-y-6 max-w-5xl mx-auto">
+    <AppLayout title={t('page.admin')}>
+    <div className="space-y-6 max-w-5xl mx-auto">
       <h1 className="text-3xl font-bold text-ink-heading">Administration</h1>
 
       <div className="flex gap-1 border-b border-cream-subtle">
@@ -467,5 +470,6 @@ export function AdminPage() {
         {tab === 'precurseurs'  && <SymptomesSection />}
       </div>
     </div>
+    </AppLayout>
   )
 }

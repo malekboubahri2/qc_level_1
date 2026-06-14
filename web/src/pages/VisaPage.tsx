@@ -1,52 +1,58 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { ClipboardCheck } from 'lucide-react'
+import { AppLayout } from '../components/AppLayout'
 import { api } from '../lib/api'
 import { t } from '../lib/i18n'
 import { useAuth } from '../lib/auth'
 import type { SuiviRead } from '../lib/api'
 
-function VisaRow({ suivi }: { suivi: SuiviRead }) {
-  const { user } = useAuth()
+function VisaRow({ suivi, myVisa }: { suivi: SuiviRead; myVisa: 'qualite' | 'prod' | null }) {
   const qc = useQueryClient()
-  const role = user?.role as 'qualite' | 'prod' | 'methode' | undefined
-
-  const myVisa = role === 'qualite' ? 'qualite' : role === 'prod' ? 'prod' : null
-
   const signMut = useMutation({
     mutationFn: (type: 'qualite' | 'prod') => api.suivis.visa(suivi.id, type),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['suivis'] }),
   })
 
-  const hasSigned = (type: string) =>
-    suivi.visas.some(v => v.type === type)
+  const hasSigned = (type: string) => suivi.visas.some(v => v.type === type)
 
   return (
-    <tr className="border-b last:border-0">
-      <td className="py-2 px-3 text-sm">{suivi.date}</td>
-      <td className="py-2 px-3 text-sm font-mono">{suivi.num_chariot}</td>
-      <td className="py-2 px-3 text-sm font-mono">{suivi.num_porte_objet}</td>
-      <td className={`py-2 px-3 text-sm font-bold ${suivi.resultat === 'NOK' ? 'text-red-600' : 'text-green-700'}`}>
-        {suivi.resultat}
-      </td>
-      <td className="py-2 px-3 text-sm">
-        <span className={hasSigned('qualite') ? 'text-green-600' : 'text-muted'}>
-          {hasSigned('qualite') ? t('visa.signed') : t('visa.notSigned')}
+    <tr className="border-b border-cream-subtle last:border-0 hover:bg-cream-subtle/50 transition-colors odd:bg-white even:bg-cream/30">
+      <td className="px-4 py-3 text-sm font-mono text-xs">{suivi.date}</td>
+      <td className="px-4 py-3 text-sm font-mono text-xs">{suivi.num_chariot}</td>
+      <td className="px-4 py-3 text-sm font-mono text-xs">{suivi.num_porte_objet}</td>
+      <td className="px-4 py-3 text-sm">
+        <span className={`font-bold ${suivi.resultat === 'NOK' ? 'text-danger' : 'text-success'}`}>
+          {suivi.resultat}
         </span>
       </td>
-      <td className="py-2 px-3 text-sm">
-        <span className={hasSigned('prod') ? 'text-green-600' : 'text-muted'}>
-          {hasSigned('prod') ? t('visa.signed') : t('visa.notSigned')}
-        </span>
+      <td className="px-4 py-3 text-sm">
+        {hasSigned('qualite') ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium bg-success/10 text-success">
+            <span className="w-1.5 h-1.5 rounded-full bg-success" />{t('visa.signed')}
+          </span>
+        ) : (
+          <span className="text-xs text-ink-muted">{t('visa.notSigned')}</span>
+        )}
+      </td>
+      <td className="px-4 py-3 text-sm">
+        {hasSigned('prod') ? (
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium bg-success/10 text-success">
+            <span className="w-1.5 h-1.5 rounded-full bg-success" />{t('visa.signed')}
+          </span>
+        ) : (
+          <span className="text-xs text-ink-muted">{t('visa.notSigned')}</span>
+        )}
       </td>
       {myVisa && (
-        <td className="py-2 px-3">
+        <td className="px-4 py-3">
           {hasSigned(myVisa) ? (
-            <span className="text-green-600 text-sm font-medium">{t('visa.signed')}</span>
+            <span className="text-xs font-medium text-success">{t('visa.signed')}</span>
           ) : (
             <button
-              className="btn-primary text-xs px-2 py-1 rounded disabled:opacity-50"
               disabled={signMut.isPending}
               onClick={() => signMut.mutate(myVisa)}
+              className="px-3 py-1.5 text-xs font-semibold bg-brand hover:bg-brand-dark text-cream rounded-lg transition-colors disabled:opacity-40"
             >
               {signMut.isPending ? '…' : t('visa.sign')}
             </button>
@@ -70,54 +76,62 @@ export function VisaPage() {
     queryFn: () => api.suivis.list(),
   })
 
-  const roleLabel =
-    user?.role === 'qualite' ? t('role.qualite') : t('role.prod')
+  const myVisa: 'qualite' | 'prod' | null =
+    user?.role === 'qualite' ? 'qualite' : user?.role === 'prod' ? 'prod' : null
+
+  const roleLabel = user?.role === 'qualite' ? t('role.qualite') : t('role.prod')
 
   return (
-    <div className="p-4 space-y-4 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <h1 className="text-xl font-bold text-primary">
-          {t('visa.titre')} — {roleLabel}
-        </h1>
-        <label className="text-sm font-medium">
-          {t('kpis.depuis')}
-          <input
-            type="date"
-            className="ml-2 border rounded px-2 py-1 text-sm"
-            value={depuis}
-            onChange={e => setDepuis(e.target.value)}
-          />
-        </label>
-      </div>
-
-      {isLoading ? (
-        <p className="text-sm text-muted">{t('common.loading')}</p>
-      ) : suivis.length === 0 ? (
-        <p className="text-sm text-muted">{t('kpis.tauxNc.empty')}</p>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full text-left">
-            <thead className="bg-primary text-primary-foreground text-xs uppercase">
-              <tr>
-                <th className="py-2 px-3">Date</th>
-                <th className="py-2 px-3">Chariot</th>
-                <th className="py-2 px-3">Porte-Obj.</th>
-                <th className="py-2 px-3">Résultat</th>
-                <th className="py-2 px-3">{t('visa.qualite')}</th>
-                <th className="py-2 px-3">{t('visa.prod')}</th>
-                {(user?.role === 'qualite' || user?.role === 'prod') && (
-                  <th className="py-2 px-3">Action</th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {suivis.map(s => (
-                <VisaRow key={s.id} suivi={s} />
-              ))}
-            </tbody>
-          </table>
+    <AppLayout title={`${t('visa.titre')} — ${roleLabel}`}>
+      <div className="space-y-6 max-w-5xl mx-auto">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <h1 className="text-3xl font-bold text-ink-heading">{t('visa.titre')}</h1>
+          <label className="text-sm font-medium text-ink-heading flex items-center gap-2">
+            {t('kpis.depuis')}
+            <input
+              type="date"
+              className="border border-cream-subtle bg-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+              value={depuis}
+              onChange={e => setDepuis(e.target.value)}
+            />
+          </label>
         </div>
-      )}
-    </div>
+
+        <div className="bg-white rounded-lg shadow-card">
+          <div className="flex items-center gap-2 px-6 py-4 border-b border-cream-subtle">
+            <ClipboardCheck size={20} strokeWidth={1.5} className="text-brand" />
+            <h2 className="text-lg font-semibold text-ink-heading">{roleLabel}</h2>
+          </div>
+
+          {isLoading ? (
+            <div className="px-6 py-8 space-y-2">
+              {[1, 2, 3].map(i => <div key={i} className="h-4 bg-cream-subtle rounded animate-pulse" />)}
+            </div>
+          ) : suivis.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3 text-ink-muted">
+              <ClipboardCheck size={24} strokeWidth={1.5} />
+              <p className="text-sm">Aucun suivi enregistré sur cette période.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-cream-subtle border-b border-cream-subtle">
+                    {['Date', 'Chariot', 'Porte-Obj.', 'Résultat', t('visa.qualite'), t('visa.prod'), ...(myVisa ? ['Action'] : [])].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-ink-muted">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {suivis.map(s => (
+                    <VisaRow key={s.id} suivi={s} myVisa={myVisa} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </AppLayout>
   )
 }

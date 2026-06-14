@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { AppLayout } from '../components/AppLayout'
 import { api } from '../lib/api'
 import { t } from '../lib/i18n'
 import { useAuth } from '../lib/auth'
@@ -153,8 +154,8 @@ export function MethodeMobilePage() {
   }
 
   return (
-    <div className="p-4 space-y-4 max-w-lg mx-auto">
-      <h1 className="text-xl font-bold text-primary">{t('mobile.titre')}</h1>
+    <AppLayout title={t('mobile.titre')}>
+    <div className="space-y-4 max-w-lg mx-auto">
 
       {/* Push toggle */}
       <div className="rounded-lg border border-border bg-card p-3 flex items-center justify-between gap-3">
@@ -194,5 +195,6 @@ export function MethodeMobilePage() {
         </div>
       )}
     </div>
+    </AppLayout>
   )
 }
