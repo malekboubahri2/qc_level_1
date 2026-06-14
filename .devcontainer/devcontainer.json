@@ -22,6 +22,14 @@
   // Installs project dependencies only (the toolchain itself is in the image).
   "postCreateCommand": "bash .devcontainer/post-create.sh",
 
+  // Use your host git identity/config inside the container. The
+  // ${localEnv:HOME}${localEnv:USERPROFILE} pair resolves to the home dir on
+  // both Linux/macOS (HOME) and Windows (USERPROFILE). VS Code forwards git
+  // credentials / the SSH agent automatically, so pushes use your host auth.
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind"
+  ],
+
   "remoteUser": "vscode",
 
   "customizations": {
