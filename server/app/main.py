@@ -5,13 +5,26 @@ Health lives at both `/health` (Docker healthcheck, internal) and
 """
 from __future__ import annotations
 
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
-from .routers import auth, clients, health, produits, symptomes, utilisateurs
+from .routers import alertes, auth, clients, events, health, produits, suivis, symptomes, utilisateurs
+from .services.scheduler import expire_alertes_loop
 
-app = FastAPI(title="QC Level 1 API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    task = asyncio.create_task(expire_alertes_loop())
+    yield
+    task.cancel()
+    await asyncio.gather(task, return_exceptions=True)
+
+
+app = FastAPI(title="QC Level 1 API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,4 +45,7 @@ api.include_router(clients.router)
 api.include_router(produits.router)
 api.include_router(utilisateurs.router)
 api.include_router(symptomes.router)
+api.include_router(suivis.router)
+api.include_router(alertes.router)
+api.include_router(events.router)
 app.include_router(api)
