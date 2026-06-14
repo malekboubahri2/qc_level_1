@@ -5,8 +5,8 @@ import type { Me } from '../lib/api'
 const HOME_BY_ROLE: Record<Me['role'], string> = {
   inspecteur: '/inspecteur',
   methode: '/methode/ecran',
-  qualite: '/kpis',
-  prod: '/kpis',
+  qualite: '/visa',
+  prod: '/visa',
   admin: '/admin',
 }
 

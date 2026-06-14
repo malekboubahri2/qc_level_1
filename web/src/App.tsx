@@ -7,6 +7,7 @@ import { MethodeEcranPage } from './pages/MethodeEcranPage'
 import { MethodeMobilePage } from './pages/MethodeMobilePage'
 import { AdminPage } from './pages/AdminPage'
 import { KpisPage } from './pages/KpisPage'
+import { VisaPage } from './pages/VisaPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
 export function App() {
@@ -61,6 +62,14 @@ export function App() {
           element={
             <ProtectedRoute>
               <KpisPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/visa"
+          element={
+            <ProtectedRoute roles={['qualite', 'prod']}>
+              <VisaPage />
             </ProtectedRoute>
           }
         />
