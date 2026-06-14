@@ -153,6 +153,7 @@ export interface SuiviRead {
   created_at: string
   updated_at: string
   symptomes: SuiviSymptomeRead[]
+  visas: VisaRead[]
 }
 
 export interface AlerteCreate {
@@ -184,6 +185,14 @@ export interface AlerteRead {
   updated_at: string
 }
 
+export interface VisaRead {
+  id: number
+  suivi_id: number
+  type: 'qualite' | 'prod' | 'methode'
+  utilisateur_id: number
+  signed_at: string
+}
+
 export interface DecisionCreate {
   action_text: string
   resultat_text?: string | null
@@ -197,6 +206,28 @@ export interface DecisionRead {
   action_text: string
   resultat_text: string | null
   decided_at: string
+}
+
+// ── Phase 2 types ────────────────────────────────────────────────────────────
+
+export interface TauxNcRow {
+  date: string
+  total: number
+  nok: number
+  taux: number
+}
+
+export interface PrecurseurRow {
+  code: string
+  libelle_fr: string
+  count: number
+}
+
+export interface TempsReponseRow {
+  alerte_id: number
+  severite: 'normale' | 'urgente'
+  duree_secondes: number
+  created_at: string
 }
 
 // ── SSE event payloads ───────────────────────────────────────────────────────
@@ -260,5 +291,47 @@ export const api = {
   sseUrl: (): string => {
     const token = tokenStore.access ?? ''
     return `${BASE}/events?token=${encodeURIComponent(token)}`
+  },
+
+  push: {
+    vapidPublicKey: () => request<{ public_key: string }>('/push/vapid-public-key', { auth: false }),
+    subscribe: (sub: { endpoint: string; p256dh: string; auth: string }) =>
+      request<{ id: number }>('/push/subscribe', { method: 'POST', body: sub }),
+    unsubscribe: (endpoint: string) =>
+      request<void>(`/push/subscribe?endpoint=${encodeURIComponent(endpoint)}`, { method: 'DELETE' }),
+  },
+
+  kpis: {
+    tauxNc: (depuis?: string, clientId?: number, produitId?: number) => {
+      const p = new URLSearchParams()
+      if (depuis) p.set('depuis', depuis)
+      if (clientId != null) p.set('client_id', String(clientId))
+      if (produitId != null) p.set('produit_id', String(produitId))
+      const qs = p.toString() ? `?${p}` : ''
+      return request<TauxNcRow[]>(`/kpis/taux-nc${qs}`)
+    },
+    precurseurs: (depuis?: string, produitId?: number) => {
+      const p = new URLSearchParams()
+      if (depuis) p.set('depuis', depuis)
+      if (produitId != null) p.set('produit_id', String(produitId))
+      const qs = p.toString() ? `?${p}` : ''
+      return request<PrecurseurRow[]>(`/kpis/precurseurs${qs}`)
+    },
+    tempsReponse: (depuis?: string) => {
+      const qs = depuis ? `?depuis=${encodeURIComponent(depuis)}` : ''
+      return request<TempsReponseRow[]>(`/kpis/temps-reponse${qs}`)
+    },
+  },
+
+  exportSuiviPdf: async (depuis?: string, clientId?: number): Promise<Blob> => {
+    const p = new URLSearchParams()
+    if (depuis) p.set('depuis', depuis)
+    if (clientId != null) p.set('client_id', String(clientId))
+    const qs = p.toString() ? `?${p}` : ''
+    const headers: Record<string, string> = {}
+    if (tokenStore.access) headers['Authorization'] = `Bearer ${tokenStore.access}`
+    const res = await fetch(`${BASE}/export/suivi.pdf${qs}`, { headers })
+    if (!res.ok) throw new ApiError(res.status, res.statusText)
+    return res.blob()
   },
 }
