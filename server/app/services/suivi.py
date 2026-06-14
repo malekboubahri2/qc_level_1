@@ -75,7 +75,10 @@ def sync_suivis(
 def list_suivis(db: Session) -> list[SuiviRead]:
     rows = db.execute(
         select(SuiviQualiteProd)
-        .options(selectinload(SuiviQualiteProd.symptomes))
+        .options(
+            selectinload(SuiviQualiteProd.symptomes),
+            selectinload(SuiviQualiteProd.visas),
+        )
         .order_by(SuiviQualiteProd.id.desc())
     ).scalars().all()
     return [_load(r) for r in rows]
@@ -84,7 +87,10 @@ def list_suivis(db: Session) -> list[SuiviRead]:
 def get_suivi(db: Session, suivi_id: int) -> SuiviRead:
     row = db.execute(
         select(SuiviQualiteProd)
-        .options(selectinload(SuiviQualiteProd.symptomes))
+        .options(
+            selectinload(SuiviQualiteProd.symptomes),
+            selectinload(SuiviQualiteProd.visas),
+        )
         .where(SuiviQualiteProd.id == suivi_id)
     ).scalar_one_or_none()
     if row is None:

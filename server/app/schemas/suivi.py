@@ -35,6 +35,24 @@ class SuiviCreate(BaseModel):
     symptomes: list[SuiviSymptomeCreate] = Field(default_factory=list)
 
 
+class SuiviSyncBatch(BaseModel):
+    items: list[SuiviCreate]
+
+
+class VisaCreate(BaseModel):
+    type: TypeVisa
+
+
+class VisaRead(BaseModel):
+    id: int
+    suivi_id: int
+    type: TypeVisa
+    utilisateur_id: int
+    signed_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class SuiviRead(BaseModel):
     id: int
     local_uuid: str
@@ -51,23 +69,6 @@ class SuiviRead(BaseModel):
     created_at: datetime
     updated_at: datetime
     symptomes: list[SuiviSymptomeRead]
-
-    model_config = {"from_attributes": True}
-
-
-class SuiviSyncBatch(BaseModel):
-    items: list[SuiviCreate]
-
-
-class VisaCreate(BaseModel):
-    type: TypeVisa
-
-
-class VisaRead(BaseModel):
-    id: int
-    suivi_id: int
-    type: TypeVisa
-    utilisateur_id: int
-    signed_at: datetime
+    visas: list[VisaRead] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
