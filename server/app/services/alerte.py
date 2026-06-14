@@ -56,6 +56,16 @@ def create_alerte(
     db.refresh(alerte)
 
     broker.publish("alerte.created", _sse_alerte(alerte))
+
+    # Best-effort push to the target responsable (online-only, best-effort).
+    from . import push as push_svc
+    push_svc.notify_user(db, alerte.responsable_cible_id, {
+        "type": "alerte.created",
+        "alerte_id": alerte.id,
+        "num_chariot": alerte.num_chariot,
+        "severite": alerte.severite.value,
+    })
+
     return AlerteRead.model_validate(alerte)
 
 
@@ -152,12 +162,20 @@ def expire_due(db: Session, timeout_seconds: int) -> int:
     ).scalars().all()
 
     count = 0
+    from . import push as push_svc
+
     for alerte in rows:
         alerte.statut = StatutAlerte.expiree
         broker.publish("alerte.expired", {
             "id": alerte.id,
             "num_chariot": alerte.num_chariot,
             "responsable_cible_id": alerte.responsable_cible_id,
+        })
+        # Escalation push to ALL methode users on expiry.
+        push_svc.notify_all_methode(db, {
+            "type": "alerte.expired",
+            "alerte_id": alerte.id,
+            "num_chariot": alerte.num_chariot,
         })
         count += 1
 
