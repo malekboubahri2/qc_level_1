@@ -1,0 +1,3 @@
+[submodule "deploy/edge"]
+	path = deploy/edge
+	url = https://github.com/malekboubahri2/pmp-edge
