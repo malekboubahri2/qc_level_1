@@ -70,5 +70,7 @@ class SuiviRead(BaseModel):
     updated_at: datetime
     symptomes: list[SuiviSymptomeRead]
     visas: list[VisaRead] = Field(default_factory=list)
+    # Resolved from alerte → decision; None when no alerte or decision not yet recorded
+    action_methode: str | None = None
 
     model_config = {"from_attributes": True}

@@ -8,12 +8,27 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from ..models import SuiviQualiteProd, SuiviSymptome, Utilisateur, Visa
+from ..models.alerte import Alerte, Decision
 from ..models.enums import TypeVisa
 from ..schemas.suivi import SuiviCreate, SuiviRead, VisaRead
 
 
-def _load(suivi: SuiviQualiteProd) -> SuiviRead:
-    return SuiviRead.model_validate(suivi)
+def _action_methode(db: Session, suivi_id: int) -> str | None:
+    """Return the first recorded decision action_text for this suivi, if any."""
+    row = db.execute(
+        select(Decision.action_text)
+        .join(Alerte, Alerte.id == Decision.alerte_id)
+        .where(Alerte.suivi_id == suivi_id)
+        .order_by(Decision.id.asc())
+        .limit(1)
+    ).scalar_one_or_none()
+    return row
+
+
+def _load(db: Session, suivi: SuiviQualiteProd) -> SuiviRead:
+    out = SuiviRead.model_validate(suivi)
+    out.action_methode = _action_methode(db, suivi.id)
+    return out
 
 
 def _attach_symptomes(
@@ -40,7 +55,7 @@ def create_suivi(
     ).scalar_one_or_none()
     if existing is not None:
         db.refresh(existing, ["symptomes", "visas"])
-        return _load(existing)
+        return _load(db, existing)
 
     suivi = SuiviQualiteProd(
         local_uuid=payload.local_uuid,
@@ -59,7 +74,7 @@ def create_suivi(
     _attach_symptomes(db, suivi, payload.symptomes)
     db.commit()
     db.refresh(suivi, ["symptomes", "visas"])
-    return _load(suivi)
+    return _load(db, suivi)
 
 
 def sync_suivis(
@@ -83,7 +98,7 @@ def list_suivis(db: Session, inspecteur_id: int | None = None) -> list[SuiviRead
     )
     if inspecteur_id is not None:
         stmt = stmt.where(SuiviQualiteProd.inspecteur_id == inspecteur_id)
-    return [_load(r) for r in db.execute(stmt).scalars().all()]
+    return [_load(db, r) for r in db.execute(stmt).scalars().all()]
 
 
 def get_suivi(db: Session, suivi_id: int) -> SuiviRead:
@@ -97,7 +112,7 @@ def get_suivi(db: Session, suivi_id: int) -> SuiviRead:
     ).scalar_one_or_none()
     if row is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Suivi introuvable")
-    return _load(row)
+    return _load(db, row)
 
 
 def sign_visa(

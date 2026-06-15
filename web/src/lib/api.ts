@@ -154,6 +154,7 @@ export interface SuiviRead {
   updated_at: string
   symptomes: SuiviSymptomeRead[]
   visas: VisaRead[]
+  action_methode: string | null
 }
 
 export interface AlerteCreate {

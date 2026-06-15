@@ -122,7 +122,7 @@ export function InspecteurHistoriquePage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-cream-subtle border-b border-cream-subtle">
-                    {['Date', 'Heure', 'Chariot', 'Nb P.O.', 'Résultat', 'Défauts'].map(h => (
+                    {['Date', 'Heure', 'Chariot', 'Nb P.O.', 'Résultat', 'Défauts', 'Action méthode'].map(h => (
                       <th
                         key={h}
                         className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-ink-muted whitespace-nowrap"
@@ -167,6 +167,11 @@ export function InspecteurHistoriquePage() {
                         <td className="px-4 py-3 text-xs text-ink-muted max-w-40">
                           {activeSymptomes.length > 0
                             ? activeSymptomes.map(sym => symptomeById[sym.symptome_id] ?? String(sym.symptome_id)).join(', ')
+                            : <span className="text-ink-muted/40">—</span>}
+                        </td>
+                        <td className="px-4 py-3 text-xs max-w-48">
+                          {s.action_methode
+                            ? <span className="text-ink">{s.action_methode}</span>
                             : <span className="text-ink-muted/40">—</span>}
                         </td>
                       </tr>
