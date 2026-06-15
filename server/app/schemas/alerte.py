@@ -32,6 +32,9 @@ class AlerteRead(BaseModel):
     decision_id: int | None
     created_at: datetime
     updated_at: datetime
+    # Embedded from the linked Decision row (None until méthode records one)
+    action_text: str | None = None
+    resultat_text: str | None = None
 
     model_config = {"from_attributes": True}
 

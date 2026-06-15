@@ -29,10 +29,11 @@ def create_alerte(
 @router.get("", response_model=list[AlerteRead])
 def list_alertes(
     statut: StatutAlerte | None = Query(None),
+    responsable_cible_id: int | None = Query(None),
     db: Session = Depends(get_db),
     _: Utilisateur = Depends(get_current_user),
 ) -> list[AlerteRead]:
-    return svc.list_alertes(db, statut)
+    return svc.list_alertes(db, statut, responsable_cible_id)
 
 
 @router.get("/{alerte_id}", response_model=AlerteRead)

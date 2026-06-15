@@ -6,6 +6,7 @@ import { InspecteurPage } from './pages/InspecteurPage'
 import { InspecteurHistoriquePage } from './pages/InspecteurHistoriquePage'
 import { MethodeEcranPage } from './pages/MethodeEcranPage'
 import { MethodeMobilePage } from './pages/MethodeMobilePage'
+import { MethodeHistoriquePage } from './pages/MethodeHistoriquePage'
 import { AdminPage } from './pages/AdminPage'
 import { KpisPage } from './pages/KpisPage'
 import { VisaPage } from './pages/VisaPage'
@@ -55,6 +56,14 @@ export function App() {
           element={
             <ProtectedRoute roles={['methode']}>
               <MethodeMobilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/methode/historique"
+          element={
+            <ProtectedRoute roles={['methode']}>
+              <MethodeHistoriquePage />
             </ProtectedRoute>
           }
         />

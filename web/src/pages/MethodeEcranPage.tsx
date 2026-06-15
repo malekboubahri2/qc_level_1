@@ -7,7 +7,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { AlertTriangle, Bell, CheckCircle, WifiOff } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { AlertTriangle, Bell, CheckCircle, ClipboardList, WifiOff } from 'lucide-react'
 import { AppLayout } from '../components/AppLayout'
 import { Button } from '../components/Button'
 import { StatusBadge } from '../components/StatusBadge'
@@ -259,7 +260,16 @@ export function MethodeEcranPage() {
         {/* Header bar */}
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-xl font-bold text-ink-heading">{t('ecran.titre')}</h1>
-          <ConnectionDot connected={connected} />
+          <div className="flex items-center gap-3">
+            <Link
+              to="/methode/historique"
+              className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-brand transition-colors"
+            >
+              <ClipboardList size={16} strokeWidth={1.5} />
+              Historique
+            </Link>
+            <ConnectionDot connected={connected} />
+          </div>
         </div>
 
         {activeAlertes.length === 0 && closedAlertes.length === 0 ? (

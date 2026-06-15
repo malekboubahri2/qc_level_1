@@ -184,6 +184,8 @@ export interface AlerteRead {
   decision_id: number | null
   created_at: string
   updated_at: string
+  action_text: string | null
+  resultat_text: string | null
 }
 
 export interface VisaRead {
@@ -308,8 +310,13 @@ export const api = {
   alertes: {
     create: (payload: AlerteCreate) =>
       request<AlerteRead>('/alertes', { method: 'POST', body: payload }),
-    list: (statut?: StatutAlerte) =>
-      request<AlerteRead[]>(`/alertes${statut ? `?statut=${statut}` : ''}`),
+    list: (params?: { statut?: StatutAlerte; responsable_cible_id?: number }) => {
+      const qs = new URLSearchParams()
+      if (params?.statut) qs.set('statut', params.statut)
+      if (params?.responsable_cible_id) qs.set('responsable_cible_id', String(params.responsable_cible_id))
+      const q = qs.toString()
+      return request<AlerteRead[]>(`/alertes${q ? `?${q}` : ''}`)
+    },
     get: (id: number) => request<AlerteRead>(`/alertes/${id}`),
     ack: (id: number) => request<AlerteRead>(`/alertes/${id}/ack`, { method: 'PATCH' }),
     decision: (id: number, payload: DecisionCreate) =>

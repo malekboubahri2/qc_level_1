@@ -39,7 +39,7 @@ def create_alerte(
         select(Alerte).where(Alerte.local_uuid == payload.local_uuid)
     ).scalar_one_or_none()
     if existing is not None:
-        return AlerteRead.model_validate(existing)
+        return _load_alerte(db, existing)
 
     alerte = Alerte(
         local_uuid=payload.local_uuid,
@@ -66,22 +66,38 @@ def create_alerte(
         "severite": alerte.severite.value,
     })
 
-    return AlerteRead.model_validate(alerte)
+    return _load_alerte(db, alerte)
 
 
-def list_alertes(db: Session, statut: StatutAlerte | None = None) -> list[AlerteRead]:
+def _load_alerte(db: Session, alerte: Alerte) -> AlerteRead:
+    out = AlerteRead.model_validate(alerte)
+    if alerte.decision_id is not None:
+        dec = db.get(Decision, alerte.decision_id)
+        if dec is not None:
+            out.action_text = dec.action_text
+            out.resultat_text = dec.resultat_text
+    return out
+
+
+def list_alertes(
+    db: Session,
+    statut: StatutAlerte | None = None,
+    responsable_cible_id: int | None = None,
+) -> list[AlerteRead]:
     q = select(Alerte).order_by(Alerte.created_at.desc())
     if statut is not None:
         q = q.where(Alerte.statut == statut)
+    if responsable_cible_id is not None:
+        q = q.where(Alerte.responsable_cible_id == responsable_cible_id)
     rows = db.execute(q).scalars().all()
-    return [AlerteRead.model_validate(r) for r in rows]
+    return [_load_alerte(db, r) for r in rows]
 
 
 def get_alerte(db: Session, alerte_id: int) -> AlerteRead:
     row = db.get(Alerte, alerte_id)
     if row is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Alerte introuvable")
-    return AlerteRead.model_validate(row)
+    return _load_alerte(db, row)
 
 
 def ack_alerte(db: Session, alerte_id: int, user: Utilisateur) -> AlerteRead:
@@ -105,7 +121,7 @@ def ack_alerte(db: Session, alerte_id: int, user: Utilisateur) -> AlerteRead:
         "acknowledged_by": alerte.acknowledged_by,
         "responsable_cible_id": alerte.responsable_cible_id,
     })
-    return AlerteRead.model_validate(alerte)
+    return _load_alerte(db, alerte)
 
 
 def record_decision(
