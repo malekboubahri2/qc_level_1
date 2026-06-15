@@ -1,7 +1,8 @@
 # ── Build: resolve deps into a venv with uv ───────────────────────────────
 FROM python:3.11-slim AS build
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+# Install uv via pip — avoids pulling from ghcr.io which may be unreachable on a LAN-only host.
+RUN pip install uv --no-cache-dir
 
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 \
