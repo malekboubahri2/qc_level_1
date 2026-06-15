@@ -12,7 +12,7 @@ COPY . .
 RUN pnpm build
 
 # ── Runtime: Caddy serves the static bundle + proxies /api + TLS ──────────
-FROM caddy:2-alpine AS runtime
+FROM caddy:2.8-alpine AS runtime
 
 COPY --from=build /app/dist /srv
 COPY Caddyfile /etc/caddy/Caddyfile
