@@ -189,20 +189,22 @@ function ChariotStep({ value, onChange, onNext, onBack }: {
   value: string; onChange: (v: string) => void; onNext: () => void; onBack?: () => void
 }) {
   return (
-    <StepChrome step={1} totalSteps={5} onBack={onBack} label="N° Chariot"
+    <StepChrome step={1} totalSteps={4} onBack={onBack} label="N° Chariot"
       sublabel="Numéro du chariot à contrôler"
       footer={<BigBtn onClick={onNext} disabled={!value.trim()}>Suivant →</BigBtn>}
     >
       <div className="flex flex-col items-center pt-6 gap-6">
         <input
           autoFocus
-          inputMode="text"
+          type="number"
+          inputMode="numeric"
+          min={1}
           value={value}
-          onChange={e => onChange(e.target.value.toUpperCase())}
+          onChange={e => onChange(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && value.trim() && onNext()}
-          placeholder="CH-001"
+          placeholder="1"
           className="w-full max-w-sm text-center text-3xl font-bold text-ink bg-white rounded-2xl
-                     border-2 border-cream-subtle px-6 py-6 uppercase tracking-widest
+                     border-2 border-cream-subtle px-6 py-6
                      focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/20
                      placeholder:text-ink-muted/30"
         />
@@ -217,7 +219,7 @@ function PorteObjetStep({ value, onChange, onNext, onBack }: {
   value: string; onChange: (v: string) => void; onNext: () => void; onBack: () => void
 }) {
   return (
-    <StepChrome step={2} totalSteps={5} onBack={onBack} label="Nb Porte-Objets"
+    <StepChrome step={2} totalSteps={4} onBack={onBack} label="Nb Porte-Objets"
       sublabel="Combien de porte-objets sur ce chariot ?"
       footer={<BigBtn onClick={onNext} disabled={!value.trim()}>Suivant →</BigBtn>}
     >
@@ -242,41 +244,36 @@ function PorteObjetStep({ value, onChange, onNext, onBack }: {
   )
 }
 
-// ── Step 3: Client ────────────────────────────────────────────────────────────
+// ── Step 3: Produit (client shown as context on each card) ───────────────────
 
-function ClientStep({ clients, selected, onPick, onBack }: {
-  clients: ClientRead[]; selected: number | null; onPick: (id: number) => void; onBack: () => void
-}) {
-  const active = clients.filter(c => c.actif)
-  return (
-    <StepChrome step={3} totalSteps={5} onBack={onBack} label="Client"
-      sublabel="Appuyez pour sélectionner — avance automatiquement"
-    >
-      <div className="grid gap-3 pt-2 pb-8">
-        {active.map(c => (
-          <PickCard key={c.id} selected={selected === c.id}
-            primary={c.nom} secondary={c.code} onClick={() => onPick(c.id)} />
-        ))}
-      </div>
-    </StepChrome>
-  )
-}
-
-// ── Step 4: Produit ───────────────────────────────────────────────────────────
-
-function ProduitStep({ produits, selected, onPick, onBack }: {
-  produits: ProduitRead[]; selected: number | null; onPick: (id: number) => void; onBack: () => void
+function ProduitStep({ produits, clientById, selected, onPick, onBack }: {
+  produits: ProduitRead[]
+  clientById: Record<number, ClientRead>
+  selected: number | null
+  onPick: (id: number) => void
+  onBack: () => void
 }) {
   return (
-    <StepChrome step={4} totalSteps={5} onBack={onBack} label="Référence article"
-      sublabel="Appuyez pour sélectionner — avance automatiquement"
+    <StepChrome step={3} totalSteps={4} onBack={onBack} label="Référence article"
+      sublabel={produits.length > 0 ? 'Appuyez pour sélectionner — avance automatiquement' : undefined}
     >
-      <div className="grid gap-3 pt-2 pb-8">
-        {produits.map(p => (
-          <PickCard key={p.id} selected={selected === p.id}
-            primary={p.reference} secondary={p.libelle} onClick={() => onPick(p.id)} />
-        ))}
-      </div>
+      {produits.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-3 text-ink-muted">
+          <p className="text-base font-medium">Aucun article configuré.</p>
+          <p className="text-sm">Contactez l'administrateur pour associer des articles à un client.</p>
+        </div>
+      ) : (
+        <div className="grid gap-3 pt-2 pb-8">
+          {produits.map(p => {
+            const clientNom = p.client_id != null ? (clientById[p.client_id]?.nom ?? '') : ''
+            const secondary = [clientNom, p.libelle].filter(Boolean).join(' · ')
+            return (
+              <PickCard key={p.id} selected={selected === p.id}
+                primary={p.reference} secondary={secondary} onClick={() => onPick(p.id)} />
+            )
+          })}
+        </div>
+      )}
     </StepChrome>
   )
 }
@@ -287,7 +284,7 @@ function ResultatStep({ value, onPick, onBack }: {
   value: 'OK' | 'NOK'; onPick: (v: 'OK' | 'NOK') => void; onBack: () => void
 }) {
   return (
-    <StepChrome step={5} totalSteps={5} onBack={onBack} label="Résultat du contrôle"
+    <StepChrome step={4} totalSteps={4} onBack={onBack} label="Résultat du contrôle"
       sublabel="Un seul appui — avance automatiquement"
     >
       <div className="flex flex-col gap-4 pb-6" style={{ height: 'calc(100% - 0.5rem)' }}>
@@ -332,7 +329,7 @@ function DefautsStep({ symptomes, selectedIds, onToggle, commentaire, onCommenta
   onNext: () => void; onBack: () => void
 }) {
   return (
-    <StepChrome step={5} totalSteps={5} onBack={onBack} label="Défauts détectés"
+    <StepChrome step={4} totalSteps={4} onBack={onBack} label="Défauts détectés"
       sublabel="Sélectionnez tous les défauts observés"
       footer={<BigBtn onClick={onNext}>Valider le contrôle →</BigBtn>}
     >
@@ -624,8 +621,6 @@ export function InspecteurPage() {
   const { data: symptomes = [] } = useQuery({ queryKey: ['symptomes'], queryFn: api.symptomes.list })
   const { data: methodes = [] } = useQuery({ queryKey: ['responsables'], queryFn: api.responsables.list })
 
-  const activeClients = clients.filter(c => c.actif)
-
   // Wizard state
   const [step, setStep] = useState<Step>('chariot')
   const [, setHistory] = useState<Step[]>([])
@@ -637,9 +632,9 @@ export function InspecteurPage() {
   const [alerteSending, setAlerteSending] = useState(false)
 
   // Derived
-  const filteredProduits = allProduits.filter(
-    p => p.actif && (!data.client_id || p.client_id === data.client_id || p.client_id === null),
-  )
+  const clientById: Record<number, ClientRead> = Object.fromEntries(clients.map(c => [c.id, c]))
+  // Inspector picks the article directly; client is derived from the article's client_id
+  const selectableProduits = allProduits.filter(p => p.actif && p.client_id != null)
   const activeSymptomes = symptomes.filter(s => s.actif)
 
   // Background sync
@@ -724,21 +719,10 @@ export function InspecteurPage() {
     }
   }
 
-  // Client selection: auto-skip produit if only 1 option
-  const handleClientPick = (clientId: number) => {
-    const prods = allProduits.filter(p => p.actif && (p.client_id === clientId || p.client_id === null))
-    if (prods.length === 1) {
-      setData(d => ({ ...d, client_id: clientId, produit_id: prods[0].id }))
-      push('resultat')
-    } else {
-      setData(d => ({ ...d, client_id: clientId, produit_id: null }))
-      push('produit')
-    }
-  }
-
-  // Produit selection: auto-advance
+  // Produit selection: derive client_id from article, auto-advance
   const handleProduitPick = (produitId: number) => {
-    setData(d => ({ ...d, produit_id: produitId }))
+    const produit = allProduits.find(p => p.id === produitId)
+    setData(d => ({ ...d, produit_id: produitId, client_id: produit?.client_id ?? null }))
     push('resultat')
   }
 
@@ -790,24 +774,19 @@ export function InspecteurPage() {
         <PorteObjetStep
           value={data.num_porte_objet}
           onChange={v => setData(d => ({ ...d, num_porte_objet: v }))}
-          onNext={() => {
-            // Auto-skip client if only 1 active
-            if (activeClients.length === 1) {
-              handleClientPick(activeClients[0].id)
-            } else {
-              push('client')
-            }
-          }}
+          onNext={() => push('produit')}
           onBack={back}
         />
       )}
 
-      {step === 'client' && (
-        <ClientStep clients={activeClients} selected={data.client_id} onPick={handleClientPick} onBack={back} />
-      )}
-
       {step === 'produit' && (
-        <ProduitStep produits={filteredProduits} selected={data.produit_id} onPick={handleProduitPick} onBack={back} />
+        <ProduitStep
+          produits={selectableProduits}
+          clientById={clientById}
+          selected={data.produit_id}
+          onPick={handleProduitPick}
+          onBack={back}
+        />
       )}
 
       {step === 'resultat' && (

@@ -1,0 +1,33 @@
+# Production overrides for on-premise RPi deployment.
+#
+# Applies on top of docker-compose.yml:
+#   docker compose -p qc_level1 \
+#     -f docker-compose.yml \
+#     -f deploy/docker-compose.prod.yml \
+#     up -d --build
+#
+# Container names are prefixed with the project name (qc_level1_) so they
+# do not clash with any other stack (qc-server, dashboard, …) already running
+# on the same host.
+
+services:
+  api:
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  web:
+    # Use non-standard ports so ports 80/443 stay free for the existing stack.
+    # Override with QC_HTTP_PORT / QC_HTTPS_PORT in .env if needed.
+    ports:
+      - "${QC_HTTP_PORT:-8180}:80"
+      - "${QC_HTTPS_PORT:-8443}:443"
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
