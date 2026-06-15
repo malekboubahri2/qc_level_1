@@ -20,11 +20,8 @@ services:
         max-file: "3"
 
   web:
-    # Use non-standard ports so ports 80/443 stay free for the existing stack.
-    # Override with QC_HTTP_PORT / QC_HTTPS_PORT in .env if needed.
-    ports:
-      - "${QC_HTTP_PORT:-8180}:80"
-      - "${QC_HTTPS_PORT:-8443}:443"
+    # Ports come from QC_HTTP_PORT / QC_HTTPS_PORT in .env (defaults 8180/8443).
+    # Defined in base docker-compose.yml via env-var substitution — no merge needed.
     restart: always
     logging:
       driver: json-file
