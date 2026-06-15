@@ -5,8 +5,19 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import Utilisateur
+from ..models.enums import Role
 from ..schemas.utilisateur import UtilisateurCreate, UtilisateurUpdate
 from ..security import hash_secret
+
+
+def list_methode_actifs(db: Session) -> list[Utilisateur]:
+    return list(
+        db.execute(
+            select(Utilisateur)
+            .where(Utilisateur.role == Role.methode, Utilisateur.actif.is_(True))
+            .order_by(Utilisateur.nom)
+        ).scalars()
+    )
 
 
 def list_utilisateurs(db: Session) -> list[Utilisateur]:

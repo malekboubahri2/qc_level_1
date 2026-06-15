@@ -72,16 +72,18 @@ def sync_suivis(
     return result
 
 
-def list_suivis(db: Session) -> list[SuiviRead]:
-    rows = db.execute(
+def list_suivis(db: Session, inspecteur_id: int | None = None) -> list[SuiviRead]:
+    stmt = (
         select(SuiviQualiteProd)
         .options(
             selectinload(SuiviQualiteProd.symptomes),
             selectinload(SuiviQualiteProd.visas),
         )
         .order_by(SuiviQualiteProd.id.desc())
-    ).scalars().all()
-    return [_load(r) for r in rows]
+    )
+    if inspecteur_id is not None:
+        stmt = stmt.where(SuiviQualiteProd.inspecteur_id == inspecteur_id)
+    return [_load(r) for r in db.execute(stmt).scalars().all()]
 
 
 def get_suivi(db: Session, suivi_id: int) -> SuiviRead:

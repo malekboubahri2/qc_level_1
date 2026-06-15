@@ -250,6 +250,10 @@ export const api = {
     }),
   me: () => request<Me>('/auth/me'),
 
+  responsables: {
+    list: () => request<UtilisateurRead[]>('/responsables'),
+  },
+
   utilisateurs: {
     list: () => request<UtilisateurRead[]>('/utilisateurs'),
     create: (body: { nom: string; role: string; secret: string; telephone?: string; actif?: boolean }) =>
@@ -291,7 +295,10 @@ export const api = {
       request<SuiviRead>('/suivis', { method: 'POST', body: payload }),
     sync: (items: SuiviCreate[]) =>
       request<SuiviRead[]>('/suivis/sync', { method: 'POST', body: { items } }),
-    list: () => request<SuiviRead[]>('/suivis'),
+    list: (params?: { inspecteur_id?: number }) => {
+      const qs = params?.inspecteur_id ? `?inspecteur_id=${params.inspecteur_id}` : ''
+      return request<SuiviRead[]>(`/suivis${qs}`)
+    },
     get: (id: number) => request<SuiviRead>(`/suivis/${id}`),
     visa: (id: number, type: 'qualite' | 'prod' | 'methode') =>
       request<{ id: number }>(`/suivis/${id}/visa`, { method: 'POST', body: { type } }),

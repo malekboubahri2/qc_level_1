@@ -117,7 +117,7 @@ export function VisaPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-cream-subtle border-b border-cream-subtle">
-                    {['Date', 'Chariot', 'Porte-Obj.', 'Résultat', t('visa.qualite'), t('visa.prod'), ...(myVisa ? ['Action'] : [])].map(h => (
+                    {['Date', 'Chariot', 'Nb P.O.', 'Résultat', t('visa.qualite'), t('visa.prod'), ...(myVisa ? ['Action'] : [])].map(h => (
                       <th key={h} className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-ink-muted">{h}</th>
                     ))}
                   </tr>

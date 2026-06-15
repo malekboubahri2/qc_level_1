@@ -36,8 +36,9 @@ def sync_suivis(
 def list_suivis(
     db: Session = Depends(get_db),
     _: Utilisateur = Depends(get_current_user),
+    inspecteur_id: int | None = None,
 ) -> list[SuiviRead]:
-    return svc.list_suivis(db)
+    return svc.list_suivis(db, inspecteur_id=inspecteur_id)
 
 
 @router.get("/{suivi_id}", response_model=SuiviRead)

@@ -3,6 +3,7 @@ import { ProtectedRoute } from './routes/ProtectedRoute'
 import { RoleHome } from './routes/RoleHome'
 import { LoginPage } from './pages/LoginPage'
 import { InspecteurPage } from './pages/InspecteurPage'
+import { InspecteurHistoriquePage } from './pages/InspecteurHistoriquePage'
 import { MethodeEcranPage } from './pages/MethodeEcranPage'
 import { MethodeMobilePage } from './pages/MethodeMobilePage'
 import { AdminPage } from './pages/AdminPage'
@@ -30,6 +31,14 @@ export function App() {
           element={
             <ProtectedRoute roles={['inspecteur']}>
               <InspecteurPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inspecteur/historique"
+          element={
+            <ProtectedRoute roles={['inspecteur']}>
+              <InspecteurHistoriquePage />
             </ProtectedRoute>
           }
         />

@@ -17,9 +17,10 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import {
   ChevronLeft, LogOut, WifiOff, CheckCircle,
-  AlertTriangle, Clock, Bell,
+  AlertTriangle, Clock, Bell, ClipboardList,
 } from 'lucide-react'
 import { api, type AlerteRead, type ClientRead, type ProduitRead, type SuiviRead, type UtilisateurRead } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -65,8 +66,15 @@ function InspecteurLayout({ children }: { children: React.ReactNode }) {
             <span className="font-bold tracking-tight">{t('app.title')}</span>
             {!online && <WifiOff size={14} className="text-warning" />}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-xs bg-cream/10 px-2 py-0.5 rounded">{user?.nom}</span>
+            <Link
+              to="/inspecteur/historique"
+              className="text-cream/70 hover:text-cream p-1.5 rounded active:bg-cream/10"
+              title="Historique"
+            >
+              <ClipboardList size={18} strokeWidth={1.5} />
+            </Link>
             <button
               onClick={logout}
               className="text-cream/70 hover:text-cream p-1.5 rounded active:bg-cream/10"
@@ -209,20 +217,23 @@ function PorteObjetStep({ value, onChange, onNext, onBack }: {
   value: string; onChange: (v: string) => void; onNext: () => void; onBack: () => void
 }) {
   return (
-    <StepChrome step={2} totalSteps={5} onBack={onBack} label="N° Porte-Objets"
-      sublabel="Référence du rack / jig porte-pièces"
+    <StepChrome step={2} totalSteps={5} onBack={onBack} label="Nb Porte-Objets"
+      sublabel="Combien de porte-objets sur ce chariot ?"
       footer={<BigBtn onClick={onNext} disabled={!value.trim()}>Suivant →</BigBtn>}
     >
       <div className="flex flex-col items-center pt-6 gap-6">
         <input
           autoFocus
-          inputMode="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          type="number"
+          min={1}
           value={value}
-          onChange={e => onChange(e.target.value.toUpperCase())}
+          onChange={e => onChange(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && value.trim() && onNext()}
-          placeholder="PO-42"
+          placeholder="4"
           className="w-full max-w-sm text-center text-3xl font-bold text-ink bg-white rounded-2xl
-                     border-2 border-cream-subtle px-6 py-6 uppercase tracking-widest
+                     border-2 border-cream-subtle px-6 py-6
                      focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/20
                      placeholder:text-ink-muted/30"
         />
@@ -611,9 +622,8 @@ export function InspecteurPage() {
   const { data: clients = [] } = useQuery({ queryKey: ['clients'], queryFn: api.clients.list })
   const { data: allProduits = [] } = useQuery({ queryKey: ['produits'], queryFn: api.produits.list })
   const { data: symptomes = [] } = useQuery({ queryKey: ['symptomes'], queryFn: api.symptomes.list })
-  const { data: utilisateurs = [] } = useQuery({ queryKey: ['utilisateurs'], queryFn: api.utilisateurs.list })
+  const { data: methodes = [] } = useQuery({ queryKey: ['responsables'], queryFn: api.responsables.list })
 
-  const methodes = utilisateurs.filter(u => u.role === 'methode' && u.actif)
   const activeClients = clients.filter(c => c.actif)
 
   // Wizard state
@@ -683,7 +693,8 @@ export function InspecteurPage() {
         const s = await api.suivis.create(payload)
         await clearSyncedSuivis([local_uuid])
         setSuivi(s)
-        push('alerte_ask')
+        // NOK → alerte is mandatory; skip the ask screen
+        push(d.resultat === 'NOK' ? 'alerte_responsable' : 'alerte_ask')
         return
       } catch { /* fall through */ }
     }

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..deps import require_roles
+from ..deps import get_current_user, require_roles
 from ..models.enums import Role
 from ..schemas.utilisateur import UtilisateurCreate, UtilisateurRead, UtilisateurUpdate
 from ..services import utilisateur as service
@@ -13,6 +13,18 @@ from ..services import utilisateur as service
 router = APIRouter(
     prefix="/utilisateurs", tags=["utilisateurs"], dependencies=[Depends(require_roles(Role.admin))]
 )
+
+# Separate router: accessible to any authenticated user.
+public_router = APIRouter(prefix="/responsables", tags=["utilisateurs"])
+
+
+@public_router.get("", response_model=list[UtilisateurRead])
+def list_responsables(
+    db: Session = Depends(get_db),
+    _: object = Depends(get_current_user),
+) -> list:
+    """Active méthode users — readable by any authenticated role (inspector needs this to pick a responsable)."""
+    return service.list_methode_actifs(db)
 
 
 @router.get("", response_model=list[UtilisateurRead])

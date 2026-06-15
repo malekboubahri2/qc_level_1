@@ -39,7 +39,7 @@ const resources: Record<Locale, Record<string, string>> = {
     // Suivi form
     'suivi.titre': 'Contrôle chariot',
     'suivi.numChariot': 'N° Chariot',
-    'suivi.numPorteObjet': 'N° Porte-Objets',
+    'suivi.numPorteObjet': 'Nb Porte-Objets',
     'suivi.client': 'Client',
     'suivi.produit': 'Référence article',
     'suivi.resultat': 'Résultat contrôle',
