@@ -122,7 +122,7 @@ export function InspecteurHistoriquePage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-cream-subtle border-b border-cream-subtle">
-                    {['Date', 'Heure', 'Chariot', 'Nb P.O.', 'Résultat', 'Défauts', 'Action méthode'].map(h => (
+                    {['Date', 'Heure', 'Chariot', 'Nb P.O.', 'Client', 'Référence', 'Résultat', 'Défauts', 'Action méthode'].map(h => (
                       <th
                         key={h}
                         className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-ink-muted whitespace-nowrap"
@@ -152,6 +152,15 @@ export function InspecteurHistoriquePage() {
                         </td>
                         <td className="px-4 py-3 text-sm text-center font-mono">
                           {s.num_porte_objet}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-ink-muted whitespace-nowrap">
+                          {s.client_nom ?? '—'}
+                        </td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap">
+                          <span className="font-mono font-semibold text-ink">{s.produit_reference ?? '—'}</span>
+                          {s.produit_libelle && (
+                            <span className="block text-xs text-ink-muted">{s.produit_libelle}</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <span className={cn(

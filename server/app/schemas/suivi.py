@@ -72,5 +72,9 @@ class SuiviRead(BaseModel):
     visas: list[VisaRead] = Field(default_factory=list)
     # Resolved from alerte → decision; None when no alerte or decision not yet recorded
     action_methode: str | None = None
+    # Resolved names (joined server-side)
+    client_nom: str | None = None
+    produit_reference: str | None = None
+    produit_libelle: str | None = None
 
     model_config = {"from_attributes": True}

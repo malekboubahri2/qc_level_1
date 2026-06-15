@@ -9,25 +9,72 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..models import SuiviQualiteProd, SuiviSymptome, Utilisateur, Visa
 from ..models.alerte import Alerte, Decision
+from ..models.client import Client
+from ..models.produit import Produit
 from ..models.enums import TypeVisa
 from ..schemas.suivi import SuiviCreate, SuiviRead, VisaRead
 
 
-def _action_methode(db: Session, suivi_id: int) -> str | None:
-    """Return the first recorded decision action_text for this suivi, if any."""
-    row = db.execute(
-        select(Decision.action_text)
-        .join(Alerte, Alerte.id == Decision.alerte_id)
-        .where(Alerte.suivi_id == suivi_id)
-        .order_by(Decision.id.asc())
-        .limit(1)
-    ).scalar_one_or_none()
-    return row
+def _build_lookup(db: Session, suivi_ids: list[int]) -> dict[int, dict]:
+    """One query: pull client_nom, produit_reference/libelle, action_methode for all rows."""
+    if not suivi_ids:
+        return {}
+
+    # Client and produit names via JOIN
+    name_rows = db.execute(
+        select(
+            SuiviQualiteProd.id,
+            Client.nom.label("client_nom"),
+            Produit.reference.label("produit_reference"),
+            Produit.libelle.label("produit_libelle"),
+        )
+        .join(Client, Client.id == SuiviQualiteProd.client_id)
+        .join(Produit, Produit.id == SuiviQualiteProd.produit_id)
+        .where(SuiviQualiteProd.id.in_(suivi_ids))
+    ).all()
+
+    lookup: dict[int, dict] = {
+        r.id: {
+            "client_nom": r.client_nom,
+            "produit_reference": r.produit_reference,
+            "produit_libelle": r.produit_libelle,
+            "action_methode": None,
+        }
+        for r in name_rows
+    }
+
+    # Decision action per suivi (first recorded)
+    dec_rows = db.execute(
+        select(Alerte.suivi_id, Decision.action_text)
+        .join(Decision, Decision.alerte_id == Alerte.id)
+        .where(Alerte.suivi_id.in_(suivi_ids))
+        .order_by(Alerte.suivi_id, Decision.id.asc())
+    ).all()
+    seen: set[int] = set()
+    for r in dec_rows:
+        if r.suivi_id not in seen:
+            seen.add(r.suivi_id)
+            if r.suivi_id in lookup:
+                lookup[r.suivi_id]["action_methode"] = r.action_text
+
+    return lookup
 
 
-def _load(db: Session, suivi: SuiviQualiteProd) -> SuiviRead:
+def _load(db: Session, suivi: SuiviQualiteProd, extra: dict | None = None) -> SuiviRead:
     out = SuiviRead.model_validate(suivi)
-    out.action_methode = _action_methode(db, suivi.id)
+    if extra:
+        out.client_nom = extra.get("client_nom")
+        out.produit_reference = extra.get("produit_reference")
+        out.produit_libelle = extra.get("produit_libelle")
+        out.action_methode = extra.get("action_methode")
+    else:
+        # Single-row fallback (used on create/get)
+        lk = _build_lookup(db, [suivi.id])
+        e = lk.get(suivi.id, {})
+        out.client_nom = e.get("client_nom")
+        out.produit_reference = e.get("produit_reference")
+        out.produit_libelle = e.get("produit_libelle")
+        out.action_methode = e.get("action_methode")
     return out
 
 
@@ -98,7 +145,9 @@ def list_suivis(db: Session, inspecteur_id: int | None = None) -> list[SuiviRead
     )
     if inspecteur_id is not None:
         stmt = stmt.where(SuiviQualiteProd.inspecteur_id == inspecteur_id)
-    return [_load(db, r) for r in db.execute(stmt).scalars().all()]
+    rows = db.execute(stmt).scalars().all()
+    lookup = _build_lookup(db, [r.id for r in rows])
+    return [_load(db, r, lookup.get(r.id)) for r in rows]
 
 
 def get_suivi(db: Session, suivi_id: int) -> SuiviRead:

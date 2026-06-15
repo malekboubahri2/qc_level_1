@@ -155,6 +155,9 @@ export interface SuiviRead {
   symptomes: SuiviSymptomeRead[]
   visas: VisaRead[]
   action_methode: string | null
+  client_nom: string | null
+  produit_reference: string | null
+  produit_libelle: string | null
 }
 
 export interface AlerteCreate {
