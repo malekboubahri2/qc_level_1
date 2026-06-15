@@ -38,11 +38,13 @@ every teammate.
 
 ### The full stack (production-like)
 
-Runs the API and the Caddy-served PWA together over HTTPS:
+Runs the API and the Caddy-served PWA together. In dev the `edge` network
+may not exist; either bring up [pmp-edge](deploy/edge) first, or run the
+services individually (below).
 
 ```bash
-cp .env.example .env          # fill in the secrets (a dev .env is provided)
-docker compose up --build     # → https://localhost   (login: admin / admin)
+cp .env.example .env          # fill in QC_SECRET_KEY and QC_ADMIN_SECRET
+docker compose up --build     # web on :80 internally, routed via pmp-edge
 ```
 
 The API container applies migrations and seeds reference data on startup, so the
@@ -78,12 +80,15 @@ Copy `.env.example` to `.env`; Docker Compose reads it.
 
 | Variable | Used by | Purpose |
 |---|---|---|
-| `SITE_ADDRESS` | Caddy | Hostname served + issued an internal-CA cert (e.g. `qc.atelier.local`). |
 | `QC_SECRET_KEY` | API | JWT signing key — set a long random value (`openssl rand -hex 32`). |
-| `QC_CORS_ORIGINS` | API | Allowed browser origin(s), comma-separated. |
+| `QC_CORS_ORIGINS` | API | Allowed browser origin(s) — default `https://qcl1.pmp.com`. |
 | `QC_ALERTE_TIMEOUT_SECONDS` | API | Escalation timeout `T` (used from Phase 1). |
 | `QC_ADMIN_NOM`, `QC_ADMIN_SECRET` | API | Admin user seeded on first boot if none exists. |
 | `QC_DATABASE_URL` | API | SQLite path; set by Compose to the on-volume DB. |
+
+TLS and hostname routing are handled by the shared **pmp-edge** ingress
+(`deploy/edge/`). The app is published at `https://qcl1.pmp.com` with no
+custom port. See [docs/deploiement.md](docs/deploiement.md) for setup.
 
 For a standalone local API the defaults work (SQLite in `server/`, a dev key).
 

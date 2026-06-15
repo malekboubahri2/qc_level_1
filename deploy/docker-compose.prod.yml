@@ -7,8 +7,8 @@
 #     up -d --build
 #
 # Container names are prefixed with the project name (qc_level1_) so they
-# do not clash with any other stack (qc-server, dashboard, …) already running
-# on the same host.
+# do not clash with any other stack already running on the same host.
+# TLS is handled by the shared pmp-edge ingress (qcl1.pmp.com:443).
 
 services:
   api:
@@ -20,8 +20,6 @@ services:
         max-file: "3"
 
   web:
-    # Ports come from QC_HTTP_PORT / QC_HTTPS_PORT in .env (defaults 8180/8443).
-    # Defined in base docker-compose.yml via env-var substitution — no merge needed.
     restart: always
     logging:
       driver: json-file

@@ -18,9 +18,11 @@ error() { echo -e "${RED}[qc-update]${NC} $*" >&2; exit 1; }
 [ -f docker-compose.yml ] || error "Run this script from the repo root (where docker-compose.yml lives)."
 [ -f .env ]               || error ".env not found. Run deploy/install.sh first."
 
-# ── 1. Pull latest code ───────────────────────────────────────────────────────
+# ── 1. Pull latest code + submodule ──────────────────────────────────────────
 info "Pulling latest code…"
 git pull --ff-only
+# Keep the pmp-edge submodule reference up to date (for docs + shared scripts).
+git submodule update --init --remote deploy/edge
 
 # ── 2. Rebuild images ─────────────────────────────────────────────────────────
 info "Rebuilding images…"
@@ -38,9 +40,11 @@ $COMPOSE_CMD -p "$PROJECT_NAME" \
 
 # ── 4. Health check ───────────────────────────────────────────────────────────
 info "Waiting for API to become healthy (up to 60s)…"
+HTTP="0"
 for i in $(seq 1 12); do
-  HTTP=$(curl -sk -o /dev/null -w "%{http_code}" \
-    "http://localhost:${QC_HTTP_PORT:-8180}/api/v1/health" 2>/dev/null || echo "0")
+  HTTP=$(docker exec "${PROJECT_NAME}-api-1" \
+    python3 -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health').status)" \
+    2>/dev/null || echo "0")
   if [ "$HTTP" = "200" ]; then
     info "API healthy."
     break
@@ -55,4 +59,4 @@ if [ "$HTTP" != "200" ]; then
   warn "  $COMPOSE_CMD -p $PROJECT_NAME logs api --tail 50"
 fi
 
-info "Update complete."
+info "Update complete. App: https://qcl1.pmp.com"

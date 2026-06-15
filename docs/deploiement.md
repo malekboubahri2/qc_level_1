@@ -1,6 +1,27 @@
 # Déploiement — QC Level 1 (PMP)
 
-Déploiement on-premise sur un Raspberry Pi (ou toute machine Linux avec Docker).
+Déploiement on-premise sur le Raspberry Pi, derrière l'ingress partagé **pmp-edge**.
+
+L'application est accessible à **`https://qcl1.pmp.com`** — aucun port non-standard.
+TLS est terminé par pmp-edge (Caddy) ; la CA interne est partagée entre toutes
+les apps du Pi.
+
+---
+
+## Architecture de déploiement
+
+```
+Browser (*.pmp.com résolu → 192.168.1.28 par dnsmasq)
+        │
+        ▼ :443 (HTTPS, TLS terminé ici)
+  pmp-edge (Caddy docker-proxy)
+        │  route par Host: qcl1.pmp.com
+        ▼ :80 (HTTP interne, réseau Docker "edge")
+  qc_level1-web-1  (Caddy — SPA + /api proxy)
+        │  réseau Docker "internal"
+        ▼ :8000
+  qc_level1-api-1  (FastAPI + SQLite)
+```
 
 ---
 
@@ -11,10 +32,12 @@ Déploiement on-premise sur un Raspberry Pi (ou toute machine Linux avec Docker)
 | Docker Engine | 24+ | `docker --version` |
 | Docker Compose v2 | 2.20+ | `docker compose version` |
 | Git | 2.x | `git --version` |
-| openssl | (standard) | `openssl version` |
+| **pmp-edge** | en cours | `docker network inspect edge` |
+
+**pmp-edge doit être démarré avant QC Level 1.** Il crée le réseau Docker
+externe `edge` et gère le TLS pour tous les services `*.pmp.com`.
 
 Installer Docker si absent :
-
 ```bash
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER   # puis se reconnecter
@@ -22,62 +45,46 @@ sudo usermod -aG docker $USER   # puis se reconnecter
 
 ---
 
-## Coexistence avec les services existants
-
-Le Pi héberge déjà `qc-server` et `dashboard`. QC Level 1 s'installe **à côté**, sans interférer :
-
-| Ce qui l'isole | Détail |
-|---|---|
-| **Nom de projet Compose** | `-p qc_level1` → tous les containers/réseaux/volumes sont préfixés `qc_level1_` |
-| **Ports** | HTTP `8180`, HTTPS `8443` (non-standard → ports 80/443 restent libres) |
-| **Volumes nommés** | `qc_level1_qc_data`, `qc_level1_caddy_data`, `qc_level1_caddy_config` |
-
-Pour changer les ports s'ils sont déjà pris, ajouter dans `.env` :
-
-```env
-QC_HTTP_PORT=8280
-QC_HTTPS_PORT=8543
-```
-
----
-
 ## Premier déploiement
 
-### 1. Cloner le dépôt sur le Pi
+### 1. Vérifier que pmp-edge est actif
 
 ```bash
-git clone <url-du-repo> /opt/qc_level1
-cd /opt/qc_level1
+docker network inspect edge >/dev/null && echo "OK" || echo "MANQUANT — démarrer pmp-edge d'abord"
 ```
 
-### 2. Lancer le script d'installation
+### 2. Cloner le dépôt sur le Pi
+
+```bash
+git clone <url-du-repo> ~/qc_level1
+cd ~/qc_level1
+git submodule update --init deploy/edge   # référence pmp-edge (docs + trust-ca.sh)
+```
+
+### 3. Lancer le script d'installation
 
 ```bash
 bash deploy/install.sh
 ```
 
 Le script :
-- vérifie les prérequis
-- génère `.env` depuis `.env.example` (clé JWT aléatoire, IP LAN auto-détectée)
+- vérifie que le réseau `edge` existe (échoue proprement sinon)
+- génère `.env` depuis `.env.example` (clé JWT aléatoire)
 - ouvre `.env` dans un éditeur pour que vous renseigniez les secrets
 - build les images et démarre la stack
 - vérifie le healthcheck `/api/v1/health`
 
-### 3. Renseigner `.env` (étape interactive dans le script)
+### 4. Renseigner `.env` (étape interactive dans le script)
 
 ```env
-# Hostname ou IP que les navigateurs utiliseront (ex : qcl1.atelier.local ou 192.168.1.28)
-SITE_ADDRESS=192.168.1.28
-
-# Doit correspondre à l'URL complète ouverte par les navigateurs
-QC_CORS_ORIGINS=https://192.168.1.28:8443
+# Clé JWT — obligatoire, longue et aléatoire
+QC_SECRET_KEY=<openssl rand -hex 32>
 
 # Mot de passe admin fort
 QC_ADMIN_SECRET=mot-de-passe-fort
 
-# Ports (laisser par défaut sauf conflit)
-QC_HTTP_PORT=8180
-QC_HTTPS_PORT=8443
+# Origine CORS — laisser la valeur par défaut sauf hostname différent
+QC_CORS_ORIGINS=https://qcl1.pmp.com
 ```
 
 > Ne jamais commiter `.env` — il est dans `.gitignore`.
@@ -87,22 +94,23 @@ QC_HTTPS_PORT=8443
 ## Mettre à jour
 
 ```bash
-cd /opt/qc_level1
+cd ~/qc_level1
 bash deploy/update.sh
 ```
 
-Pull le code → rebuild les images → redémarre les containers → vérifie le health.  
-La base SQLite est dans un volume Docker (`qc_level1_qc_data`) : elle **n'est pas écrasée** par une mise à jour.
+Pull le code + met à jour la référence du submodule pmp-edge → rebuild les
+images → redémarre les containers → vérifie le health.
+
+La base SQLite est dans le volume Docker `qc_level1_qc_data` : elle **n'est
+pas écrasée** par une mise à jour.
 
 ---
 
 ## Commandes utiles
 
-Toutes les commandes Compose s'exécutent depuis `/opt/qc_level1` avec le préfixe `-p qc_level1 -f docker-compose.yml -f deploy/docker-compose.prod.yml`.
-
 ```bash
 # Alias pratique (à ajouter dans ~/.bashrc)
-alias qc1="docker compose -p qc_level1 -f /opt/qc_level1/docker-compose.yml -f /opt/qc_level1/deploy/docker-compose.prod.yml"
+alias qc1="docker compose -p qc_level1 -f ~/qc_level1/docker-compose.yml -f ~/qc_level1/deploy/docker-compose.prod.yml"
 
 # Statut des containers
 qc1 ps
@@ -123,15 +131,17 @@ qc1 down -v
 
 ---
 
-## HTTPS et confiance du certificat
+## HTTPS et confiance du certificat CA
 
-Caddy génère son propre certificat signé par une **CA interne** (pas de Let's Encrypt — le Pi n'est pas accessible depuis Internet). Les navigateurs affichent une alerte TLS tant que la CA n'est pas installée.
+La CA interne est **celle de pmp-edge** — partagée entre toutes les apps
+`*.pmp.com`. Il suffit de l'installer **une seule fois** par appareil, même
+si de nouvelles apps sont déployées ensuite.
 
 ### Extraire le certificat CA
 
 ```bash
-cd /opt/qc_level1
-bash deploy/trust-ca.sh
+cd ~/qc_level1
+bash deploy/edge/trust-ca.sh
 # → génère caddy-ca.crt dans le dossier courant
 ```
 
@@ -144,26 +154,14 @@ bash deploy/trust-ca.sh
 | **iPhone / iPad** | AirDrop → Paramètres → Général → VPN et gestion → Profil → Installer |
 | **Linux** | `sudo cp caddy-ca.crt /usr/local/share/ca-certificates/ && sudo update-ca-certificates` |
 
-### Utiliser un vrai hostname LAN (recommandé)
-
-Si le réseau dispose d'un DNS interne ou d'un fichier `hosts` centralisé, utiliser un hostname plutôt qu'une IP :
-
-```env
-SITE_ADDRESS=qcl1.atelier.local
-QC_CORS_ORIGINS=https://qcl1.atelier.local:8443
-```
-
-Ajouter l'entrée DNS (ou dans `/etc/hosts` de chaque client) :
-
-```
-192.168.1.28  qcl1.atelier.local
-```
-
 ---
 
 ## Démarrage automatique au boot
 
-Docker redémarre les containers automatiquement (`restart: always` dans `docker-compose.prod.yml`). Aucune configuration systemd supplémentaire n'est nécessaire si le daemon Docker démarre au boot :
+Docker redémarre les containers automatiquement (`restart: always`). Il faut
+aussi que pmp-edge démarre avant QC Level 1. Docker gère cela via la dépendance
+au réseau externe `edge` : si pmp-edge n'est pas là, `docker compose up` échoue
+proprement.
 
 ```bash
 sudo systemctl enable docker
@@ -173,13 +171,12 @@ sudo systemctl enable docker
 
 ## Sauvegarde de la base
 
-La base SQLite est dans le volume Docker `qc_level1_qc_data`. Sauvegarder :
+La base SQLite est dans le volume `qc_level1_qc_data` :
 
 ```bash
-# Sur le Pi
 docker run --rm \
   -v qc_level1_qc_data:/data \
-  -v /home/pi/backups:/backup \
+  -v ~/backups:/backup \
   alpine \
   cp /data/qc_level1.db /backup/qc_level1_$(date +%Y%m%d).db
 ```
@@ -187,7 +184,7 @@ docker run --rm \
 Automatiser avec cron :
 
 ```cron
-0 2 * * * docker run --rm -v qc_level1_qc_data:/data -v /home/pi/backups:/backup alpine cp /data/qc_level1.db /backup/qc_level1_$(date +\%Y\%m\%d).db
+0 2 * * * docker run --rm -v qc_level1_qc_data:/data -v /home/user/backups:/backup alpine cp /data/qc_level1.db /backup/qc_level1_$(date +\%Y\%m\%d).db
 ```
 
 ---
@@ -195,14 +192,22 @@ Automatiser avec cron :
 ## Vérifications post-déploiement
 
 ```bash
-# Healthcheck API
-curl -k https://192.168.1.28:8443/api/v1/health
+# Depuis le Pi — DNS pmp-edge
+docker exec pmp-edge-dns-1 nslookup qcl1.pmp.com 192.168.1.28
+
+# App (HTTPS via edge)
+curl -ks --resolve qcl1.pmp.com:443:192.168.1.28 https://qcl1.pmp.com/ -o /dev/null -w '%{http_code}\n'
+# → 200
+
+# API health
+curl -ks --resolve qcl1.pmp.com:443:192.168.1.28 https://qcl1.pmp.com/api/v1/health
 # → {"status":"ok"}
 
-# Statut des containers
-docker compose -p qc_level1 ps
-# → api et web doivent être "running (healthy)" / "running"
+# Aucun port publié par qc_level1 (le réseau edge gère le trafic)
+docker ps --format '{{.Names}} {{.Ports}}' | grep qc_level1
+# → qc_level1-web-1   (aucun port hôte)
+# → qc_level1-api-1   (aucun port hôte)
 ```
 
-Ouvrir dans le navigateur : `https://192.168.1.28:8443`  
+Ouvrir dans le navigateur : `https://qcl1.pmp.com`
 Se connecter avec `admin` / `QC_ADMIN_SECRET`.

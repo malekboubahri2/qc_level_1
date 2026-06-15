@@ -1,20 +1,21 @@
-# Serves the SPA, reverse-proxies the API, and terminates TLS with Caddy's
-# internal CA (no public ACME — suits an offline plant LAN). SITE_ADDRESS is the
-# hostname to serve; defaults to localhost for a dev box.
-{$SITE_ADDRESS:localhost} {
+{
+	admin off
+}
+
+# TLS is terminated by the pmp-edge ingress; this Caddy only serves HTTP
+# on :80 inside the Docker network.
+:80 {
 	encode zstd gzip
 
-	# API → backend container. Full path is preserved (/api/v1/... reaches FastAPI).
 	handle /api/* {
-		reverse_proxy api:8000
+		reverse_proxy api:8000 {
+			flush_interval -1
+		}
 	}
 
-	# Everything else is the single-page app.
 	handle {
 		root * /srv
 		try_files {path} /index.html
 		file_server
 	}
-
-	tls internal
 }
