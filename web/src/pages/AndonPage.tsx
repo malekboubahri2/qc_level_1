@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api, type AlerteRead, type SuiviRead, type SymptomeRead } from '../lib/api'
-import { useAndonSSE, playAlarm } from '../lib/sse'
+import { useAndonSSE, playAndonChime } from '../lib/sse'
 import { t } from '../lib/i18n'
 import { cn } from '../lib/cn'
 
@@ -37,14 +37,15 @@ interface OverlayProps {
 }
 
 function EmergencyOverlay({ alerte, onDismiss, userNames, produitRefs }: OverlayProps) {
-  const [secondsLeft, setSecondsLeft] = useState(10)
+  const [secondsLeft, setSecondsLeft] = useState(30)
   const onDismissRef = useRef(onDismiss)
   useEffect(() => { onDismissRef.current = onDismiss }, [onDismiss])
 
   const alertId = alerte.id
   useEffect(() => {
-    setSecondsLeft(10)
-    playAlarm()
+    setSecondsLeft(30)
+    playAndonChime()
+    const repeat = setTimeout(playAndonChime, 15_000)
     const iv = setInterval(() => {
       setSecondsLeft((s) => {
         if (s <= 1) {
@@ -55,14 +56,14 @@ function EmergencyOverlay({ alerte, onDismiss, userNames, produitRefs }: Overlay
         return s - 1
       })
     }, 1000)
-    return () => clearInterval(iv)
+    return () => { clearInterval(iv); clearTimeout(repeat) }
   }, [alertId])
 
   const isUrgente = alerte.severite === 'urgente'
   const produitRef = produitRefs.get(alerte.produit_id) ?? `#${alerte.produit_id}`
   const responsable = userNames.get(alerte.responsable_cible_id) ?? `#${alerte.responsable_cible_id}`
   const demandeur = userNames.get(alerte.demandeur_id) ?? `#${alerte.demandeur_id}`
-  const progress = (secondsLeft / 10) * 100
+  const progress = (secondsLeft / 30) * 100
 
   return (
     <div

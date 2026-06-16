@@ -193,7 +193,7 @@ export function useAndonSSE(todayDate: string) {
   return { suivis, alertes, connected, alertQueue, setAlertQueue, newSuiviIds }
 }
 
-/* Web Audio beep — no external file, works in all modern browsers. */
+/* Web Audio beep — sharp, used by the méthode office screen. */
 export function playAlarm() {
   try {
     const ctx = new AudioContext()
@@ -211,4 +211,32 @@ export function playAlarm() {
   } catch {
     /* AudioContext unavailable in some test environments */
   }
+}
+
+/* Soft three-note descending chime (G5→E5→C5) — used by the Andon overlay. */
+export function playAndonChime() {
+  try {
+    const ctx = new AudioContext()
+    const now = ctx.currentTime
+
+    const chime = (freq: number, start: number) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(freq, start)
+      gain.gain.setValueAtTime(0, start)
+      gain.gain.linearRampToValueAtTime(0.18, start + 0.03)
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 1.4)
+      osc.start(start)
+      osc.stop(start + 1.4)
+    }
+
+    chime(784, now)        // G5
+    chime(659, now + 0.38) // E5
+    chime(523, now + 0.76) // C5
+
+    setTimeout(() => ctx.close(), 3000)
+  } catch { /* AudioContext unavailable */ }
 }
