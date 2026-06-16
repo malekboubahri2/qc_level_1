@@ -8,7 +8,7 @@ import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, Bell, CheckCircle, ClipboardList, WifiOff } from 'lucide-react'
+import { AlertTriangle, Bell, CheckCircle, ClipboardList, Settings, WifiOff, X } from 'lucide-react'
 import { AppLayout } from '../components/AppLayout'
 import { Button } from '../components/Button'
 import { StatusBadge } from '../components/StatusBadge'
@@ -17,6 +17,7 @@ import { useAuth } from '../lib/auth'
 import { t } from '../lib/i18n'
 import { useAlertesSSE, playAlarm } from '../lib/sse'
 import { cn } from '../lib/cn'
+import { subscribeToPush, hasPushSubscription, initialPushState, type BeforeInstallPromptEvent } from '../lib/push'
 
 // ── Decision form ────────────────────────────────────────────────────────────
 
@@ -205,6 +206,149 @@ function AlerteCard({
   )
 }
 
+// ── Settings panel ────────────────────────────────────────────────────────────
+
+function SettingsPanel({ onClose }: { onClose: () => void }) {
+  const [pushState, setPushState] = useState<'idle' | 'checking' | 'loading' | 'enabled' | 'denied' | 'error'>(
+    initialPushState,
+  )
+  const [pushError, setPushError] = useState<string | null>(null)
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [installed, setInstalled] = useState(
+    window.matchMedia('(display-mode: standalone)').matches,
+  )
+  const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null)
+
+  // If permission is granted, verify an actual push subscription exists; if not, subscribe now.
+  useEffect(() => {
+    if (pushState !== 'checking') return
+    let cancelled = false
+    hasPushSubscription().then(async (has) => {
+      if (cancelled) return
+      if (has) {
+        setPushState('enabled')
+      } else {
+        // Permission granted but no subscription — subscribe silently.
+        setPushState('loading')
+        try {
+          await subscribeToPush()
+          if (!cancelled) setPushState('enabled')
+        } catch (err) {
+          if (!cancelled) {
+            setPushError(err instanceof Error ? err.message : 'Erreur inconnue')
+            setPushState('error')
+          }
+        }
+      }
+    }).catch(() => { if (!cancelled) setPushState('idle') })
+    return () => { cancelled = true }
+  }, [pushState])
+
+  useEffect(() => {
+    if (installed) return
+    const handler = (e: Event) => {
+      e.preventDefault()
+      deferredPrompt.current = e as BeforeInstallPromptEvent
+      setInstallPrompt(e as BeforeInstallPromptEvent)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    window.addEventListener('appinstalled', () => {
+      setInstalled(true)
+      setInstallPrompt(null)
+    })
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [installed])
+
+  const handleEnablePush = async () => {
+    setPushState('loading')
+    setPushError(null)
+    try {
+      const perm = await Notification.requestPermission()
+      if (perm === 'granted') {
+        await subscribeToPush()
+        setPushState('enabled')
+      } else {
+        setPushState('denied')
+      }
+    } catch (err) {
+      setPushError(err instanceof Error ? err.message : 'Erreur inconnue')
+      setPushState('error')
+    }
+  }
+
+  const handleInstall = async () => {
+    if (!deferredPrompt.current) return
+    await deferredPrompt.current.prompt()
+    const { outcome } = await deferredPrompt.current.userChoice
+    if (outcome === 'accepted') {
+      setInstalled(true)
+      setInstallPrompt(null)
+    }
+  }
+
+  return (
+    <div className="absolute right-0 top-10 z-50 w-80 rounded-xl border border-brand/20 bg-cream shadow-lg">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-brand/10 px-4 py-3">
+        <span className="text-sm font-semibold text-ink-heading">{t('ecran.settings.titre')}</span>
+        <button onClick={onClose} className="text-ink-muted hover:text-ink">
+          <X size={16} />
+        </button>
+      </div>
+
+      <div className="space-y-3 p-4">
+        {/* Push notifications */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-ink">
+              {t('ecran.settings.notifications')}
+            </p>
+            <p className={cn('text-xs', pushState === 'error' ? 'text-danger truncate' : 'text-ink-muted')}>
+              {pushState === 'enabled'
+                ? t('mobile.push.enabled')
+                : pushState === 'denied'
+                  ? t('mobile.push.denied')
+                  : pushState === 'error'
+                    ? (pushError ?? 'Erreur')
+                    : t('ecran.settings.notifications.hint')}
+            </p>
+          </div>
+          {(pushState === 'idle' || pushState === 'error') && (
+            <Button size="sm" onClick={handleEnablePush} className="shrink-0">
+              {pushState === 'error' ? 'Réessayer' : t('ecran.settings.notifications.enable')}
+            </Button>
+          )}
+          {(pushState === 'loading' || pushState === 'checking') && (
+            <span className="text-xs text-ink-muted shrink-0">{t('mobile.push.loading')}</span>
+          )}
+          {pushState === 'enabled' && (
+            <span className="text-lg font-bold text-success shrink-0">✓</span>
+          )}
+        </div>
+
+        {/* PWA install */}
+        {!installed && installPrompt && (
+          <div className="flex items-center justify-between gap-3 border-t border-brand/10 pt-3">
+            <div>
+              <p className="text-sm font-medium text-ink">{t('ecran.settings.install')}</p>
+              <p className="text-xs text-ink-muted">{t('ecran.settings.install.hint')}</p>
+            </div>
+            <Button size="sm" onClick={handleInstall}>
+              {t('mobile.install.button')}
+            </Button>
+          </div>
+        )}
+        {installed && (
+          <div className="flex items-center justify-between gap-3 border-t border-brand/10 pt-3">
+            <p className="text-sm font-medium text-ink">{t('ecran.settings.install')}</p>
+            <span className="text-lg font-bold text-success">✓</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Connection indicator ──────────────────────────────────────────────────────
 
 function ConnectionDot({ connected }: { connected: boolean }) {
@@ -228,6 +372,7 @@ function ConnectionDot({ connected }: { connected: boolean }) {
 export function MethodeEcranPage() {
   const { alertes, setAlertes, connected } = useAlertesSSE()
   const prevCountRef = useRef(0)
+  const [showSettings, setShowSettings] = useState(false)
 
   const { data: produits = [] } = useQuery({ queryKey: ['produits'], queryFn: api.produits.list })
   const { data: utilisateurs = [] } = useQuery({ queryKey: ['utilisateurs'], queryFn: api.utilisateurs.list })
@@ -269,6 +414,21 @@ export function MethodeEcranPage() {
               Historique
             </Link>
             <ConnectionDot connected={connected} />
+            <div className="relative">
+              <button
+                onClick={() => setShowSettings((s) => !s)}
+                className={cn(
+                  'rounded-lg p-1.5 transition-colors',
+                  showSettings
+                    ? 'bg-brand/10 text-brand'
+                    : 'text-ink-muted hover:bg-brand/10 hover:text-brand',
+                )}
+                aria-label={t('ecran.settings.titre')}
+              >
+                <Settings size={18} strokeWidth={1.5} />
+              </button>
+              {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
+            </div>
           </div>
         </div>
 

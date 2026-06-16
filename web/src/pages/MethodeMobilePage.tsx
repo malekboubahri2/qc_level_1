@@ -5,43 +5,7 @@ import { api } from '../lib/api'
 import { t } from '../lib/i18n'
 import { useAuth } from '../lib/auth'
 import type { AlerteRead } from '../lib/api'
-
-// ── PWA install prompt ────────────────────────────────────────────────────────
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>
-  readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
-}
-
-// ── Push subscription helpers ────────────────────────────────────────────────
-
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const raw = atob(base64)
-  return Uint8Array.from(raw, c => c.charCodeAt(0))
-}
-
-async function subscribeToPush(): Promise<void> {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
-
-  const reg = await navigator.serviceWorker.ready
-  const { public_key } = await api.push.vapidPublicKey()
-  const keyBytes = urlBase64ToUint8Array(public_key)
-  const subscription = await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: keyBytes.buffer.slice(
-      keyBytes.byteOffset,
-      keyBytes.byteOffset + keyBytes.byteLength,
-    ) as ArrayBuffer,
-  })
-  const j = subscription.toJSON()
-  await api.push.subscribe({
-    endpoint: subscription.endpoint,
-    p256dh: j.keys?.p256dh ?? '',
-    auth: j.keys?.auth ?? '',
-  })
-}
+import { subscribeToPush, hasPushSubscription, initialPushState, type BeforeInstallPromptEvent } from '../lib/push'
 
 // ── Alerte card ───────────────────────────────────────────────────────────────
 
@@ -127,7 +91,9 @@ function MobileAlerteCard({ alerte }: { alerte: AlerteRead }) {
 
 export function MethodeMobilePage() {
   const { user } = useAuth()
-  const [pushState, setPushState] = useState<'idle' | 'loading' | 'enabled' | 'denied'>('idle')
+  const [pushState, setPushState] = useState<'idle' | 'checking' | 'loading' | 'enabled' | 'denied' | 'error'>(
+    initialPushState,
+  )
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState(false)
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null)
@@ -142,12 +108,22 @@ export function MethodeMobilePage() {
     a => a.responsable_cible_id === user?.id && a.statut !== 'expiree',
   )
 
-  // Push state from browser permission
   useEffect(() => {
-    if (!('Notification' in window)) return
-    if (Notification.permission === 'granted') setPushState('enabled')
-    else if (Notification.permission === 'denied') setPushState('denied')
-  }, [])
+    if (pushState !== 'checking') return
+    let cancelled = false
+    hasPushSubscription().then(async (has) => {
+      if (cancelled) return
+      if (has) { setPushState('enabled'); return }
+      setPushState('loading')
+      try {
+        await subscribeToPush()
+        if (!cancelled) setPushState('enabled')
+      } catch {
+        if (!cancelled) setPushState('idle')
+      }
+    }).catch(() => { if (!cancelled) setPushState('idle') })
+    return () => { cancelled = true }
+  }, [pushState])
 
   // PWA install prompt
   useEffect(() => {
@@ -181,7 +157,7 @@ export function MethodeMobilePage() {
         setPushState('denied')
       }
     } catch {
-      setPushState('idle')
+      setPushState('error')
     }
   }
 

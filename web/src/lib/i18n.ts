@@ -89,6 +89,12 @@ const resources: Record<Locale, Record<string, string>> = {
     'ecran.statut.acquittee': 'ACQUITTÉE',
     'ecran.statut.cloturee': 'CLÔTURÉE',
     'ecran.statut.expiree': 'EXPIRÉE',
+    'ecran.settings.titre': 'Paramètres',
+    'ecran.settings.notifications': 'Notifications push',
+    'ecran.settings.notifications.hint': 'Recevez les alertes sur ce téléphone',
+    'ecran.settings.notifications.enable': 'Activer',
+    'ecran.settings.install': 'Installer l\'app',
+    'ecran.settings.install.hint': 'Accès rapide depuis l\'écran d\'accueil',
 
     // Mobile méthode
     'mobile.titre': 'Alertes — Méthode',
