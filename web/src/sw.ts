@@ -36,19 +36,31 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event
+
+  // Safari routes blob:, data:, etc. through the SW — skip anything non-HTTP
+  // to avoid "returned response is null" errors.
+  if (!request.url.startsWith('http')) return
+
   const url = new URL(request.url)
 
   if (url.pathname.startsWith('/api/')) return
 
   if (request.mode === 'navigate') {
+    // Always resolve to a real Response — never undefined/null.
     event.respondWith(
-      fetch(request).catch(() => caches.match('/index.html') as Promise<Response>),
+      fetch(request)
+        .catch(() => caches.match('/index.html'))
+        .then((r) => r ?? fetch('/index.html'))
+        .catch(() => new Response('Offline', { status: 503 })),
     )
     return
   }
 
   event.respondWith(
-    caches.match(request).then(cached => cached ?? fetch(request)),
+    caches
+      .match(request)
+      .then((cached) => cached ?? fetch(request))
+      .catch(() => new Response('', { status: 503, statusText: 'Offline' })),
   )
 })
 
