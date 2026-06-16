@@ -382,7 +382,7 @@ export function MethodeEcranPage() {
   const [showSettings, setShowSettings] = useState(false)
 
   const { data: produits = [] } = useQuery({ queryKey: ['produits'], queryFn: api.produits.list })
-  const { data: utilisateurs = [] } = useQuery({ queryKey: ['utilisateurs'], queryFn: api.utilisateurs.list })
+  const { data: utilisateurs = [] } = useQuery({ queryKey: ['responsables', 'all'], queryFn: api.responsables.listAll })
 
   // Play alarm whenever the number of open alertes increases.
   const openCount = alertes.filter((a) => a.statut === 'ouverte').length

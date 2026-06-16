@@ -259,6 +259,8 @@ export const api = {
 
   responsables: {
     list: () => request<UtilisateurRead[]>('/responsables'),
+    /** All users — readable by any authenticated role for name lookups. */
+    listAll: () => request<UtilisateurRead[]>('/responsables/all'),
   },
 
   utilisateurs: {

@@ -350,8 +350,8 @@ export function AndonPage() {
 
   // Reference data
   const { data: users = [] } = useQuery({
-    queryKey: ['utilisateurs'],
-    queryFn: () => api.utilisateurs.list(),
+    queryKey: ['responsables', 'all'],
+    queryFn: () => api.responsables.listAll(),
     staleTime: 5 * 60_000,
   })
   const { data: produits = [] } = useQuery({

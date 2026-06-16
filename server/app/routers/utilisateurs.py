@@ -27,6 +27,15 @@ def list_responsables(
     return service.list_methode_actifs(db)
 
 
+@public_router.get("/all", response_model=list[UtilisateurRead])
+def list_all_utilisateurs(
+    db: Session = Depends(get_db),
+    _: object = Depends(get_current_user),
+) -> list:
+    """All users (id + nom + role) — readable by any authenticated role for name lookups in display."""
+    return service.list_utilisateurs(db)
+
+
 @router.get("", response_model=list[UtilisateurRead])
 def list_utilisateurs(db: Session = Depends(get_db)) -> list:
     return service.list_utilisateurs(db)
