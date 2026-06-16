@@ -13,6 +13,13 @@
 		}
 	}
 
+	# Serve CA cert with the MIME type Android needs to prompt installation.
+	handle /ca.crt {
+		root * /srv
+		header Content-Type application/x-x509-ca-cert
+		file_server
+	}
+
 	handle {
 		root * /srv
 		try_files {path} /index.html
