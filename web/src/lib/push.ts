@@ -12,9 +12,21 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return Uint8Array.from(raw, c => c.charCodeAt(0))
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Délai dépassé (${label})`)), ms),
+    ),
+  ])
+}
+
 export async function subscribeToPush(): Promise<void> {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
-  const reg = await navigator.serviceWorker.ready
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    throw new Error('Push non supporté par ce navigateur')
+  }
+
+  const reg = await withTimeout(navigator.serviceWorker.ready, 8_000, 'service worker')
   const { public_key } = await api.push.vapidPublicKey()
   const keyBytes = urlBase64ToUint8Array(public_key)
 
@@ -22,13 +34,17 @@ export async function subscribeToPush(): Promise<void> {
   const existing = await reg.pushManager.getSubscription()
   if (existing) await existing.unsubscribe()
 
-  const subscription = await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: keyBytes.buffer.slice(
-      keyBytes.byteOffset,
-      keyBytes.byteOffset + keyBytes.byteLength,
-    ) as ArrayBuffer,
-  })
+  const subscription = await withTimeout(
+    reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: keyBytes.buffer.slice(
+        keyBytes.byteOffset,
+        keyBytes.byteOffset + keyBytes.byteLength,
+      ) as ArrayBuffer,
+    }),
+    15_000,
+    'push gateway',
+  )
   const j = subscription.toJSON()
   await api.push.subscribe({
     endpoint: subscription.endpoint,
