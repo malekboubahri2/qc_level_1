@@ -10,6 +10,7 @@ import { MethodeHistoriquePage } from './pages/MethodeHistoriquePage'
 import { AdminPage } from './pages/AdminPage'
 import { KpisPage } from './pages/KpisPage'
 import { VisaPage } from './pages/VisaPage'
+import { AndonPage } from './pages/AndonPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
 export function App() {
@@ -88,6 +89,14 @@ export function App() {
           element={
             <ProtectedRoute roles={['qualite', 'prod']}>
               <VisaPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/andon"
+          element={
+            <ProtectedRoute roles={['methode']}>
+              <AndonPage />
             </ProtectedRoute>
           }
         />

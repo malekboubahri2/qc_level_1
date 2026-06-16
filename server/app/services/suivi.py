@@ -13,17 +13,19 @@ from ..models.client import Client
 from ..models.produit import Produit
 from ..models.enums import TypeVisa
 from ..schemas.suivi import SuiviCreate, SuiviRead, VisaRead
+from .sse import broker
 
 
 def _build_lookup(db: Session, suivi_ids: list[int]) -> dict[int, dict]:
-    """One query: pull client_nom, produit_reference/libelle, action_methode for all rows."""
+    """One query: pull client_nom, produit_reference/libelle, action_methode, inspecteur_nom for all rows."""
     if not suivi_ids:
         return {}
 
-    # Client and produit names via JOIN
+    # Client, produit, and inspecteur names
     name_rows = db.execute(
         select(
             SuiviQualiteProd.id,
+            SuiviQualiteProd.inspecteur_id,
             Client.nom.label("client_nom"),
             Produit.reference.label("produit_reference"),
             Produit.libelle.label("produit_libelle"),
@@ -33,12 +35,20 @@ def _build_lookup(db: Session, suivi_ids: list[int]) -> dict[int, dict]:
         .where(SuiviQualiteProd.id.in_(suivi_ids))
     ).all()
 
+    # Batch-fetch inspecteur names
+    inspecteur_ids = list({r.inspecteur_id for r in name_rows})
+    user_rows = db.execute(
+        select(Utilisateur.id, Utilisateur.nom).where(Utilisateur.id.in_(inspecteur_ids))
+    ).all()
+    user_names: dict[int, str] = {r.id: r.nom for r in user_rows}
+
     lookup: dict[int, dict] = {
         r.id: {
             "client_nom": r.client_nom,
             "produit_reference": r.produit_reference,
             "produit_libelle": r.produit_libelle,
             "action_methode": None,
+            "inspecteur_nom": user_names.get(r.inspecteur_id),
         }
         for r in name_rows
     }
@@ -67,6 +77,7 @@ def _load(db: Session, suivi: SuiviQualiteProd, extra: dict | None = None) -> Su
         out.produit_reference = extra.get("produit_reference")
         out.produit_libelle = extra.get("produit_libelle")
         out.action_methode = extra.get("action_methode")
+        out.inspecteur_nom = extra.get("inspecteur_nom")
     else:
         # Single-row fallback (used on create/get)
         lk = _build_lookup(db, [suivi.id])
@@ -75,6 +86,7 @@ def _load(db: Session, suivi: SuiviQualiteProd, extra: dict | None = None) -> Su
         out.produit_reference = e.get("produit_reference")
         out.produit_libelle = e.get("produit_libelle")
         out.action_methode = e.get("action_methode")
+        out.inspecteur_nom = e.get("inspecteur_nom")
     return out
 
 
@@ -121,7 +133,10 @@ def create_suivi(
     _attach_symptomes(db, suivi, payload.symptomes)
     db.commit()
     db.refresh(suivi, ["symptomes", "visas"])
-    return _load(db, suivi)
+    result = _load(db, suivi)
+    result.inspecteur_nom = inspecteur.nom
+    broker.publish("suivi.created", result.model_dump(mode="json"))
+    return result
 
 
 def sync_suivis(
@@ -134,7 +149,11 @@ def sync_suivis(
     return result
 
 
-def list_suivis(db: Session, inspecteur_id: int | None = None) -> list[SuiviRead]:
+def list_suivis(
+    db: Session,
+    inspecteur_id: int | None = None,
+    date: str | None = None,
+) -> list[SuiviRead]:
     stmt = (
         select(SuiviQualiteProd)
         .options(
@@ -145,6 +164,8 @@ def list_suivis(db: Session, inspecteur_id: int | None = None) -> list[SuiviRead
     )
     if inspecteur_id is not None:
         stmt = stmt.where(SuiviQualiteProd.inspecteur_id == inspecteur_id)
+    if date is not None:
+        stmt = stmt.where(SuiviQualiteProd.date == date)
     rows = db.execute(stmt).scalars().all()
     lookup = _build_lookup(db, [r.id for r in rows])
     return [_load(db, r, lookup.get(r.id)) for r in rows]

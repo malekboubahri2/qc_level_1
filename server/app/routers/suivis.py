@@ -37,8 +37,9 @@ def list_suivis(
     db: Session = Depends(get_db),
     _: Utilisateur = Depends(get_current_user),
     inspecteur_id: int | None = None,
+    date: str | None = None,
 ) -> list[SuiviRead]:
-    return svc.list_suivis(db, inspecteur_id=inspecteur_id)
+    return svc.list_suivis(db, inspecteur_id=inspecteur_id, date=date)
 
 
 @router.get("/{suivi_id}", response_model=SuiviRead)

@@ -130,6 +130,27 @@ const resources: Record<Locale, Record<string, string>> = {
     'visa.sign': 'Signer',
     'visa.signed': 'Signé',
     'visa.notSigned': 'En attente',
+
+    // Andon wall display
+    'andon.titre': 'Tableau de Bord Qualité',
+    'andon.connected': 'Connecté',
+    'andon.disconnected': 'Déconnecté',
+    'andon.suivis.titre': "Contrôles — Aujourd'hui",
+    'andon.suivis.empty': 'Aucun contrôle enregistré aujourd\'hui',
+    'andon.col.heure': 'Heure',
+    'andon.col.chariot': 'Chariot',
+    'andon.col.npo': 'N° P.O.',
+    'andon.col.ref': 'Référence',
+    'andon.col.client': 'Client',
+    'andon.col.resultat': 'Résultat',
+    'andon.col.defauts': 'Défauts',
+    'andon.col.inspecteur': 'Inspecteur',
+    'andon.pending.titre': 'Actions en attente',
+    'andon.pending.empty': 'Aucune action en cours',
+    'andon.pending.depuis': 'Depuis',
+    'andon.overlay.titre': 'DEMANDE MÉTHODE',
+    'andon.overlay.demande': 'Signalé par',
+    'andon.overlay.fermeture': 'Fermeture dans',
   },
 }
 

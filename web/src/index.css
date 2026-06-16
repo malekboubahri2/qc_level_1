@@ -133,9 +133,18 @@
 @utility animate-fade-in-up { animation: fade-in-up 360ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 @utility animate-scale-in   { animation: scale-in 300ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 
+/* Andon wall — new suivi row slides in from top with a brief accent flash */
+@keyframes andon-row-in {
+  0%   { opacity: 0; transform: translateY(-0.75rem); background-color: #D4B765; }
+  40%  { opacity: 1; transform: translateY(0);        background-color: #D4B76540; }
+  100% {                                               background-color: transparent; }
+}
+@utility andon-row-new { animation: andon-row-in 1.4s ease-out forwards; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
-  .animate-scale-in {
+  .animate-scale-in,
+  .andon-row-new {
     animation: none !important;
   }
 }

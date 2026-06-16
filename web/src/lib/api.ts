@@ -158,6 +158,7 @@ export interface SuiviRead {
   client_nom: string | null
   produit_reference: string | null
   produit_libelle: string | null
+  inspecteur_nom: string | null
 }
 
 export interface AlerteCreate {
@@ -301,8 +302,11 @@ export const api = {
       request<SuiviRead>('/suivis', { method: 'POST', body: payload }),
     sync: (items: SuiviCreate[]) =>
       request<SuiviRead[]>('/suivis/sync', { method: 'POST', body: { items } }),
-    list: (params?: { inspecteur_id?: number }) => {
-      const qs = params?.inspecteur_id ? `?inspecteur_id=${params.inspecteur_id}` : ''
+    list: (params?: { inspecteur_id?: number; date?: string }) => {
+      const parts: string[] = []
+      if (params?.inspecteur_id) parts.push(`inspecteur_id=${params.inspecteur_id}`)
+      if (params?.date) parts.push(`date=${encodeURIComponent(params.date)}`)
+      const qs = parts.length ? `?${parts.join('&')}` : ''
       return request<SuiviRead[]>(`/suivis${qs}`)
     },
     get: (id: number) => request<SuiviRead>(`/suivis/${id}`),

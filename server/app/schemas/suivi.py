@@ -76,5 +76,6 @@ class SuiviRead(BaseModel):
     client_nom: str | None = None
     produit_reference: str | None = None
     produit_libelle: str | None = None
+    inspecteur_nom: str | None = None
 
     model_config = {"from_attributes": True}
