@@ -136,7 +136,7 @@ function AlerteCard({
   return (
     <div
       className={cn(
-        'rounded-xl border-2 p-5 transition-all',
+        'rounded-xl border-2 p-4 transition-all',
         // ADR-0001: alarm exception for open/urgent alertes
         isOpen && isUrgent && 'animate-pulse border-danger bg-danger text-cream',
         isOpen && !isUrgent && 'border-warning bg-warning/10',
@@ -145,9 +145,9 @@ function AlerteCard({
       )}
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
             {isOpen && isUrgent && <AlertTriangle size={18} className="text-cream" />}
             {isOpen && !isUrgent && <Bell size={18} className="text-warning" />}
             <span
@@ -156,17 +156,22 @@ function AlerteCard({
                 isOpen && isUrgent ? 'text-cream' : 'text-ink-heading',
               )}
             >
-              {t('ecran.alerte.chariot')}: {alerte.num_chariot}
+              {produit ? produit.reference : `Produit #${alerte.produit_id}`}
             </span>
             <StatusBadge tone={statusTone}>
               {t(`ecran.statut.${alerte.statut}`)}
             </StatusBadge>
           </div>
-          <p className={cn('text-sm', isOpen && isUrgent ? 'text-cream/80' : 'text-ink-muted')}>
-            {produit ? `${produit.reference} — ${produit.libelle}` : `Produit #${alerte.produit_id}`}
+          {produit && (
+            <p className={cn('text-sm truncate', isOpen && isUrgent ? 'text-cream/80' : 'text-ink-muted')}>
+              {produit.libelle}
+            </p>
+          )}
+          <p className={cn('text-xs', isOpen && isUrgent ? 'text-cream/70' : 'text-ink-muted')}>
+            {t('ecran.alerte.chariot')}: {alerte.num_chariot}
           </p>
         </div>
-        <div className={cn('text-right text-xs', isOpen && isUrgent ? 'text-cream/70' : 'text-ink-muted')}>
+        <div className={cn('shrink-0 text-xs', isOpen && isUrgent ? 'text-cream/70' : 'text-ink-muted')}>
           <p>{t('ecran.alerte.depuis')}: {elapsedStr}</p>
           {demandeur && <p className="mt-0.5">{t('ecran.alerte.demande')}: {demandeur.nom}</p>}
         </div>
@@ -287,7 +292,7 @@ function SettingsPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="absolute right-0 top-10 z-50 w-80 rounded-xl border border-brand/20 bg-cream shadow-lg">
+    <div className="absolute right-0 top-10 z-50 w-[min(320px,calc(100vw-2rem))] rounded-xl border border-brand/20 bg-cream shadow-lg">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-brand/10 px-4 py-3">
         <span className="text-sm font-semibold text-ink-heading">{t('ecran.settings.titre')}</span>
@@ -403,15 +408,15 @@ export function MethodeEcranPage() {
         )}
       >
         {/* Header bar */}
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-ink-heading">{t('ecran.titre')}</h1>
-          <div className="flex items-center gap-3">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h1 className="text-base font-bold text-ink-heading sm:text-xl">{t('ecran.titre')}</h1>
+          <div className="flex shrink-0 items-center gap-2">
             <Link
               to="/methode/historique"
-              className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-brand transition-colors"
+              className="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-brand transition-colors"
             >
               <ClipboardList size={16} strokeWidth={1.5} />
-              Historique
+              <span className="hidden sm:inline">Historique</span>
             </Link>
             <ConnectionDot connected={connected} />
             <div className="relative">

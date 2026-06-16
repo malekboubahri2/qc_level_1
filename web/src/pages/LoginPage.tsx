@@ -51,9 +51,18 @@ export function LoginPage() {
       </span>
 
       <div className="w-full max-w-sm overflow-hidden rounded-lg bg-white shadow-popover animate-scale-in">
-        <div className="bg-brand px-6 py-5 text-ink-inverse">
-          <h1 className="text-2xl font-bold text-cream">{t('app.title')}</h1>
-          <p className="text-sm text-cream/70">{t('app.subtitle')}</p>
+        <div className="bg-brand px-5 py-4 text-ink-inverse">
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo.png"
+              alt="PMP"
+              className="h-14 w-auto shrink-0 rounded-md bg-white/90 px-2 py-1.5 object-contain"
+            />
+            <div>
+              <h1 className="text-lg font-bold leading-tight text-cream">{t('app.title')}</h1>
+              <p className="mt-0.5 text-xs text-cream/70">{t('app.subtitle')}</p>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4 p-6" noValidate>

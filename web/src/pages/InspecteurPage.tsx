@@ -61,23 +61,29 @@ function InspecteurLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="h-dvh flex flex-col bg-cream overflow-hidden select-none">
       <header className="bg-brand text-ink-inverse shrink-0 z-10">
-        <div className="flex items-center justify-between px-5 py-3">
+        <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-2">
-            <span className="font-bold tracking-tight">{t('app.title')}</span>
+            <img
+              src="/logo.png"
+              alt="PMP"
+              className="h-8 w-auto shrink-0 rounded bg-white/90 px-1.5 py-0.5 object-contain"
+            />
             {!online && <WifiOff size={14} className="text-warning" />}
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs bg-cream/10 px-2 py-0.5 rounded">{user?.nom}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="max-w-[100px] truncate rounded bg-cream/10 px-2 py-0.5 text-xs">
+              {user?.nom}
+            </span>
             <Link
               to="/inspecteur/historique"
-              className="text-cream/70 hover:text-cream p-1.5 rounded active:bg-cream/10"
+              className="rounded p-1.5 text-cream/70 hover:text-cream active:bg-cream/10"
               title="Historique"
             >
               <ClipboardList size={18} strokeWidth={1.5} />
             </Link>
             <button
               onClick={logout}
-              className="text-cream/70 hover:text-cream p-1.5 rounded active:bg-cream/10"
+              className="rounded p-1.5 text-cream/70 hover:text-cream active:bg-cream/10"
             >
               <LogOut size={18} strokeWidth={1.5} />
             </button>
@@ -120,16 +126,16 @@ function StepChrome({
       </div>
 
       {/* Title */}
-      <div className="px-6 pt-1 pb-5 shrink-0">
-        <h1 className="text-3xl font-bold text-ink-heading leading-tight">{label}</h1>
-        {sublabel && <p className="mt-1 text-ink-muted text-base">{sublabel}</p>}
+      <div className="px-4 pt-1 pb-4 shrink-0 sm:px-6 sm:pb-5">
+        <h1 className="text-2xl font-bold text-ink-heading leading-tight sm:text-3xl">{label}</h1>
+        {sublabel && <p className="mt-1 text-sm text-ink-muted sm:text-base">{sublabel}</p>}
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-6">{children}</div>
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6">{children}</div>
 
       {/* Pinned footer */}
-      {footer && <div className="px-6 pb-8 pt-4 shrink-0">{footer}</div>}
+      {footer && <div className="px-4 pb-5 pt-3 shrink-0 sm:px-6 sm:pb-8">{footer}</div>}
     </div>
   )
 }
@@ -153,7 +159,7 @@ function BigBtn({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'w-full py-5 rounded-xl text-xl font-bold transition-all active:scale-[0.98] disabled:opacity-30',
+        'w-full py-4 rounded-xl text-lg font-bold transition-all active:scale-[0.98] disabled:opacity-30 sm:py-5 sm:text-xl',
         styles[variant], className,
       )}
     >
@@ -171,13 +177,13 @@ function PickCard({
     <button
       onClick={onClick}
       className={cn(
-        'w-full text-left px-6 py-5 rounded-xl border-2 transition-all active:scale-[0.98] shadow-card',
+        'w-full text-left px-4 py-4 rounded-xl border-2 transition-all active:scale-[0.98] shadow-card sm:px-6 sm:py-5',
         selected
           ? 'border-brand bg-brand/5 text-brand'
           : 'border-cream-subtle bg-white text-ink hover:border-brand/40',
       )}
     >
-      <span className="block text-xl font-semibold leading-snug">{primary}</span>
+      <span className="block text-base font-semibold leading-snug sm:text-xl">{primary}</span>
       {secondary && <span className="block text-sm text-ink-muted mt-0.5 font-mono">{secondary}</span>}
     </button>
   )
@@ -203,8 +209,8 @@ function ChariotStep({ value, onChange, onNext, onBack }: {
           onChange={e => onChange(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && value.trim() && onNext()}
           placeholder="1"
-          className="w-full max-w-sm text-center text-3xl font-bold text-ink bg-white rounded-2xl
-                     border-2 border-cream-subtle px-6 py-6
+          className="w-full max-w-sm text-center text-2xl font-bold text-ink bg-white rounded-2xl
+                     border-2 border-cream-subtle px-4 py-4 sm:text-3xl sm:px-6 sm:py-6
                      focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/20
                      placeholder:text-ink-muted/30"
         />
@@ -234,8 +240,8 @@ function PorteObjetStep({ value, onChange, onNext, onBack }: {
           onChange={e => onChange(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && value.trim() && onNext()}
           placeholder="4"
-          className="w-full max-w-sm text-center text-3xl font-bold text-ink bg-white rounded-2xl
-                     border-2 border-cream-subtle px-6 py-6
+          className="w-full max-w-sm text-center text-2xl font-bold text-ink bg-white rounded-2xl
+                     border-2 border-cream-subtle px-4 py-4 sm:text-3xl sm:px-6 sm:py-6
                      focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/20
                      placeholder:text-ink-muted/30"
         />
@@ -377,14 +383,14 @@ function AlerteAskScreen({ suivi, onAlerte, onNouveau }: {
   suivi: SuiviRead; onAlerte: () => void; onNouveau: () => void
 }) {
   return (
-    <div className="flex flex-col h-full px-6 py-6 gap-6">
-      <div className="flex-1 flex flex-col items-center justify-center gap-5">
-        <CheckCircle size={72} strokeWidth={1} className="text-success" />
-        <p className="text-2xl font-bold text-ink-heading text-center">Contrôle enregistré</p>
-        <div className="bg-white rounded-2xl shadow-card px-8 py-6 text-center space-y-2 w-full max-w-xs">
+    <div className="flex flex-col h-full px-4 py-4 gap-5 sm:px-6 sm:py-6 sm:gap-6">
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 sm:gap-5">
+        <CheckCircle size={64} strokeWidth={1} className="text-success sm:w-18 sm:h-18" />
+        <p className="text-xl font-bold text-ink-heading text-center sm:text-2xl">Contrôle enregistré</p>
+        <div className="bg-white rounded-2xl shadow-card px-5 py-4 text-center space-y-2 w-full max-w-xs sm:px-8 sm:py-6">
           <p className="text-sm text-ink-muted uppercase tracking-wide">Chariot</p>
-          <p className="text-4xl font-bold font-mono text-ink">{suivi.num_chariot}</p>
-          <p className={cn('text-2xl font-black', suivi.resultat === 'NOK' ? 'text-danger' : 'text-success')}>
+          <p className="text-3xl font-bold font-mono text-ink sm:text-4xl">{suivi.num_chariot}</p>
+          <p className={cn('text-xl font-black sm:text-2xl', suivi.resultat === 'NOK' ? 'text-danger' : 'text-success')}>
             {suivi.resultat}
           </p>
         </div>
@@ -404,7 +410,7 @@ function AlerteAskScreen({ suivi, onAlerte, onNouveau }: {
 
 function SavedOfflineScreen({ onNouveau }: { onNouveau: () => void }) {
   return (
-    <div className="flex flex-col h-full px-6 py-8 gap-6">
+    <div className="flex flex-col h-full px-4 py-5 gap-5 sm:px-6 sm:py-8 sm:gap-6">
       <div className="flex-1 flex flex-col items-center justify-center gap-5">
         <WifiOff size={64} strokeWidth={1} className="text-warning" />
         <p className="text-2xl font-bold text-ink-heading text-center">Enregistré hors ligne</p>
@@ -429,7 +435,7 @@ function AlerteResponsableScreen({ methodes, selected, onPick, onBack }: {
 }) {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-5 pt-5 pb-4 shrink-0">
+      <div className="flex items-center gap-3 px-4 pt-4 pb-3 shrink-0 sm:px-5 sm:pt-5 sm:pb-4">
         <button
           onClick={onBack}
           className="w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-card text-ink-muted active:scale-95"
@@ -437,11 +443,11 @@ function AlerteResponsableScreen({ methodes, selected, onPick, onBack }: {
           <ChevronLeft size={22} strokeWidth={2} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-ink-heading">Choisir le responsable</h1>
+          <h1 className="text-xl font-bold text-ink-heading sm:text-2xl">Choisir le responsable</h1>
           <p className="text-ink-muted text-sm">Sélection = avance automatiquement</p>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto px-6 space-y-3 pb-8">
+      <div className="flex-1 overflow-y-auto px-4 space-y-3 pb-8 sm:px-6">
         {methodes.map(u => (
           <PickCard key={u.id} selected={selected === u.id}
             primary={u.nom} secondary={u.telephone ?? undefined}
@@ -462,8 +468,8 @@ function AlerteSeveriteScreen({ value, onPick, onBack, sending }: {
   onBack: () => void; sending: boolean
 }) {
   return (
-    <div className="flex flex-col h-full px-6">
-      <div className="flex items-center gap-3 pt-5 pb-4 shrink-0">
+    <div className="flex flex-col h-full px-4 sm:px-6">
+      <div className="flex items-center gap-3 pt-4 pb-3 shrink-0 sm:pt-5 sm:pb-4">
         <button
           onClick={onBack}
           disabled={sending}
@@ -472,7 +478,7 @@ function AlerteSeveriteScreen({ value, onPick, onBack, sending }: {
           <ChevronLeft size={22} strokeWidth={2} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-ink-heading">Sévérité de l'alerte</h1>
+          <h1 className="text-xl font-bold text-ink-heading sm:text-2xl">Sévérité de l'alerte</h1>
           <p className="text-ink-muted text-sm">Sélection = envoie l'alerte immédiatement</p>
         </div>
       </div>
@@ -486,7 +492,7 @@ function AlerteSeveriteScreen({ value, onPick, onBack, sending }: {
             value === 'normale' ? 'border-brand bg-brand/5' : 'border-cream-subtle bg-white hover:border-brand/30',
           )}
         >
-          <span className={cn('text-4xl font-black', value === 'normale' ? 'text-brand' : 'text-ink-muted/50')}>
+          <span className={cn('text-3xl font-black sm:text-4xl', value === 'normale' ? 'text-brand' : 'text-ink-muted/50')}>
             NORMALE
           </span>
           <span className="text-ink-muted mt-1 text-base">Intervention requise</span>
@@ -501,7 +507,7 @@ function AlerteSeveriteScreen({ value, onPick, onBack, sending }: {
           )}
         >
           <AlertTriangle size={40} strokeWidth={1.5} className={value === 'urgente' ? 'text-danger' : 'text-ink-muted/40'} />
-          <span className={cn('text-4xl font-black mt-2', value === 'urgente' ? 'text-danger' : 'text-ink-muted/50')}>
+          <span className={cn('text-3xl font-black mt-2 sm:text-4xl', value === 'urgente' ? 'text-danger' : 'text-ink-muted/50')}>
             URGENTE
           </span>
           <span className="text-ink-muted mt-1 text-base">Arrêt de ligne imminent</span>
@@ -561,9 +567,9 @@ function PendingScreen({ alerte, onAcked, onExpired, onNouveau }: {
   }, [alerte.id, onAcked, onExpired])
 
   return (
-    <div className="flex flex-col h-full items-center justify-center gap-8 px-8">
-      <Clock size={72} strokeWidth={1} className="text-brand animate-spin" style={{ animationDuration: '3s' }} />
-      <p className="text-2xl font-bold text-ink-heading text-center">En attente d'acquittement</p>
+    <div className="flex flex-col h-full items-center justify-center gap-6 px-4 sm:gap-8 sm:px-8">
+      <Clock size={60} strokeWidth={1} className="text-brand animate-spin sm:w-18 sm:h-18" style={{ animationDuration: '3s' }} />
+      <p className="text-xl font-bold text-ink-heading text-center sm:text-2xl">En attente d'acquittement</p>
       <p className="text-ink-muted text-center">
         Chariot <strong className="text-ink font-mono">{alerte.num_chariot}</strong> —&nbsp;
         <span className={alerte.severite === 'urgente' ? 'text-danger font-bold' : 'text-brand'}>
@@ -582,9 +588,9 @@ function PendingScreen({ alerte, onAcked, onExpired, onNouveau }: {
 
 function AckedScreen({ onNouveau }: { onNouveau: () => void }) {
   return (
-    <div className="flex flex-col h-full items-center justify-center gap-6 px-8">
-      <CheckCircle size={80} strokeWidth={1} className="text-success" />
-      <p className="text-3xl font-black text-success text-center">Acquittée</p>
+    <div className="flex flex-col h-full items-center justify-center gap-5 px-4 sm:gap-6 sm:px-8">
+      <CheckCircle size={64} strokeWidth={1} className="text-success" />
+      <p className="text-2xl font-black text-success text-center sm:text-3xl">Acquittée</p>
       <p className="text-ink-muted text-center">Le responsable méthode est intervenu.</p>
       <div className="w-full max-w-xs pt-4">
         <BigBtn variant="success" onClick={onNouveau}>Nouveau contrôle</BigBtn>
@@ -595,9 +601,9 @@ function AckedScreen({ onNouveau }: { onNouveau: () => void }) {
 
 function ExpiredScreen({ onNouveau }: { onNouveau: () => void }) {
   return (
-    <div className="flex flex-col h-full items-center justify-center gap-6 px-8">
-      <AlertTriangle size={80} strokeWidth={1} className="text-danger" />
-      <p className="text-3xl font-black text-danger text-center">Alerte expirée</p>
+    <div className="flex flex-col h-full items-center justify-center gap-5 px-4 sm:gap-6 sm:px-8">
+      <AlertTriangle size={64} strokeWidth={1} className="text-danger" />
+      <p className="text-2xl font-black text-danger text-center sm:text-3xl">Alerte expirée</p>
       <div className="bg-danger/10 border-2 border-danger rounded-xl px-5 py-4 w-full max-w-sm">
         <p className="text-sm font-bold uppercase tracking-wider text-danger text-center">
           {t('offline.banner')}

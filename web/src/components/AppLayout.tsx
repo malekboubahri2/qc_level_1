@@ -18,14 +18,26 @@ export function AppLayout({
   return (
     <div className="min-h-dvh bg-cream">
       <header className="bg-brand text-ink-inverse">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 md:px-8">
-          <div className="flex items-baseline gap-3">
-            <span className="text-lg font-bold tracking-tightish">{t('app.title')}</span>
-            <span className="text-sm text-cream/70">{title}</span>
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2 md:px-8 md:py-3">
+          {/* Logo + page label */}
+          <div className="flex min-w-0 items-center gap-2.5">
+            <img
+              src="/logo.png"
+              alt="PMP"
+              className="h-8 w-auto shrink-0 rounded bg-white/90 px-1.5 py-0.5 object-contain md:h-9"
+            />
+            <div className="min-w-0 leading-tight">
+              <p className="text-xs font-semibold text-cream leading-none">{t('app.title')}</p>
+              <p className="hidden truncate text-[11px] leading-none text-cream/60 sm:block mt-0.5">
+                {title}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
+
+          {/* Right: user chip + logout */}
+          <div className="flex shrink-0 items-center gap-2 md:gap-4">
             {user && (
-              <span className="rounded bg-cream/10 px-2 py-0.5 text-xs font-medium">
+              <span className="rounded bg-cream/10 px-2 py-0.5 text-xs font-medium max-w-[140px] truncate hidden sm:block">
                 {user.nom} · {t(`role.${user.role}`)}
               </span>
             )}
@@ -36,13 +48,18 @@ export function AppLayout({
               onClick={logout}
             >
               <Icon icon={LogOut} size={16} />
-              {t('nav.logout')}
+              <span className="ml-1 hidden md:inline">{t('nav.logout')}</span>
             </Button>
           </div>
         </div>
+
+        {/* Mobile: page title on second row */}
+        <div className="border-t border-cream/10 px-4 py-1 text-[11px] text-cream/60 sm:hidden">
+          {title}
+        </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-8 md:px-8">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-4 md:px-8 md:py-8">{children}</main>
     </div>
   )
 }
