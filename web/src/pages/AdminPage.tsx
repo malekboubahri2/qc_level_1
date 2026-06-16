@@ -53,13 +53,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 }
 
 const inputCls =
-  'w-full bg-white border border-cream-subtle rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors'
+  'w-full bg-white border border-cream-subtle rounded-lg px-4 py-3.5 text-base text-ink focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors'
 const selectCls = inputCls
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
-    <label className="block space-y-1">
-      <span className="text-sm font-medium text-ink-heading">
+    <label className="block space-y-1.5">
+      <span className="text-base font-medium text-ink-heading">
         {label}{required && <span className="text-danger ml-0.5">*</span>}
       </span>
       {children}
@@ -72,14 +72,14 @@ function ModalActions({ onClose, disabled }: { onClose: () => void; disabled: bo
     <div className="flex justify-end gap-3 pt-1">
       <button
         onClick={onClose}
-        className="px-4 py-2 text-sm font-semibold border border-brand text-brand rounded-lg hover:bg-brand/5 transition-colors"
+        className="px-5 py-3 text-base font-semibold border border-brand text-brand rounded-lg hover:bg-brand/5 transition-colors"
       >
         Annuler
       </button>
       <button
         type="submit"
         disabled={disabled}
-        className="px-4 py-2 text-sm font-semibold bg-brand hover:bg-brand-dark text-cream rounded-lg transition-colors disabled:opacity-40"
+        className="px-5 py-3 text-base font-semibold bg-brand hover:bg-brand-dark text-cream rounded-lg transition-colors disabled:opacity-40"
       >
         Enregistrer
       </button>
@@ -94,7 +94,7 @@ function TableHeader({ cols }: { cols: string[] }) {
     <thead>
       <tr className="bg-cream-subtle border-b border-cream-subtle">
         {cols.map(c => (
-          <th key={c} className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-ink-muted">
+          <th key={c} className="px-4 py-4 text-left text-sm font-medium uppercase tracking-wide text-ink-muted">
             {c}
           </th>
         ))}
@@ -112,17 +112,17 @@ function TableRow({ children, i }: { children: React.ReactNode; i: number }) {
 }
 
 function Td({ children, mono }: { children: React.ReactNode; mono?: boolean }) {
-  return <td className={`px-4 py-3 text-sm ${mono ? 'font-mono text-xs' : ''}`}>{children}</td>
+  return <td className={`px-4 py-4 text-base ${mono ? 'font-mono text-sm' : ''}`}>{children}</td>
 }
 
 function Actions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
   return (
-    <td className="px-4 py-3">
-      <div className="flex gap-3 justify-end">
-        <button onClick={onEdit} className="text-xs font-medium text-brand hover:underline transition-colors">
+    <td className="px-4 py-4">
+      <div className="flex gap-4 justify-end">
+        <button onClick={onEdit} className="text-sm font-medium text-brand hover:underline transition-colors">
           Modifier
         </button>
-        <button onClick={onDelete} className="text-xs font-medium text-danger hover:underline transition-colors">
+        <button onClick={onDelete} className="text-sm font-medium text-danger hover:underline transition-colors">
           Supprimer
         </button>
       </div>
@@ -142,9 +142,9 @@ function SectionCard({ title, icon: Icon, onAdd, children }: {
         </div>
         <button
           onClick={onAdd}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-brand hover:bg-brand-dark text-cream rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 text-base font-semibold bg-brand hover:bg-brand-dark text-cream rounded-lg transition-colors"
         >
-          <Plus size={14} strokeWidth={2} />
+          <Plus size={16} strokeWidth={2} />
           Ajouter
         </button>
       </div>

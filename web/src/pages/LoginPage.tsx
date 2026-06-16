@@ -65,19 +65,19 @@ export function LoginPage() {
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4 p-6" noValidate>
-          <h2 className="text-lg font-semibold text-ink-heading">{t('login.title')}</h2>
+        <form onSubmit={onSubmit} className="space-y-5 p-7" noValidate>
+          <h2 className="text-xl font-semibold text-ink-heading">{t('login.title')}</h2>
 
           <div>
-            <label htmlFor="nom" className="mb-1 block text-sm font-medium text-ink-heading">
+            <label htmlFor="nom" className="mb-1.5 block text-base font-medium text-ink-heading">
               {t('login.nom')} <span className="text-danger">*</span>
             </label>
             <Input id="nom" autoComplete="username" autoFocus {...register('nom')} />
-            {errors.nom && <p className="mt-1 text-xs text-danger">{t('login.nom')}</p>}
+            {errors.nom && <p className="mt-1 text-sm text-danger">{t('login.nom')}</p>}
           </div>
 
           <div>
-            <label htmlFor="secret" className="mb-1 block text-sm font-medium text-ink-heading">
+            <label htmlFor="secret" className="mb-1.5 block text-base font-medium text-ink-heading">
               {t('login.secret')} <span className="text-danger">*</span>
             </label>
             <Input
@@ -87,12 +87,12 @@ export function LoginPage() {
               {...register('secret')}
             />
             {errors.secret && (
-              <p className="mt-1 text-xs text-danger">{t('login.secret')}</p>
+              <p className="mt-1 text-sm text-danger">{t('login.secret')}</p>
             )}
           </div>
 
           {formError && (
-            <p className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">{formError}</p>
+            <p className="rounded bg-danger/10 px-4 py-3 text-base text-danger">{formError}</p>
           )}
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>

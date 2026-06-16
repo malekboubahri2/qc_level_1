@@ -51,27 +51,27 @@ function DecisionForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-3 border-t border-brand/10 pt-4">
-      <p className="text-sm font-semibold text-ink-heading">{t('ecran.decision.titre')}</p>
+      <p className="text-base font-semibold text-ink-heading">{t('ecran.decision.titre')}</p>
       <div>
-        <label className="mb-1 block text-xs font-medium text-ink-muted uppercase tracking-wide">
+        <label className="mb-1.5 block text-sm font-medium text-ink-muted uppercase tracking-wide">
           {t('ecran.decision.action')}
         </label>
         <textarea
           {...register('action_text')}
           rows={2}
-          className="w-full rounded-lg border border-brand/20 bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-brand/40"
+          className="w-full rounded-lg border border-brand/20 bg-white px-4 py-3 text-base text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-brand/40"
           placeholder="Action effectuée…"
         />
-        {errors.action_text && <p className="mt-1 text-xs text-danger">{errors.action_text.message}</p>}
+        {errors.action_text && <p className="mt-1 text-sm text-danger">{errors.action_text.message}</p>}
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-ink-muted uppercase tracking-wide">
+        <label className="mb-1.5 block text-sm font-medium text-ink-muted uppercase tracking-wide">
           {t('ecran.decision.resultat')}
         </label>
         <textarea
           {...register('resultat_text')}
           rows={2}
-          className="w-full rounded-lg border border-brand/20 bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-brand/40"
+          className="w-full rounded-lg border border-brand/20 bg-white px-4 py-3 text-base text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-brand/40"
           placeholder="Observation / résultat…"
         />
       </div>
@@ -163,15 +163,15 @@ function AlerteCard({
             </StatusBadge>
           </div>
           {produit && (
-            <p className={cn('text-sm truncate', isOpen && isUrgent ? 'text-cream/80' : 'text-ink-muted')}>
+            <p className={cn('text-base truncate', isOpen && isUrgent ? 'text-cream/80' : 'text-ink-muted')}>
               {produit.libelle}
             </p>
           )}
-          <p className={cn('text-xs', isOpen && isUrgent ? 'text-cream/70' : 'text-ink-muted')}>
+          <p className={cn('text-sm', isOpen && isUrgent ? 'text-cream/70' : 'text-ink-muted')}>
             {t('ecran.alerte.chariot')}: {alerte.num_chariot}
           </p>
         </div>
-        <div className={cn('shrink-0 text-xs', isOpen && isUrgent ? 'text-cream/70' : 'text-ink-muted')}>
+        <div className={cn('shrink-0 text-sm', isOpen && isUrgent ? 'text-cream/70' : 'text-ink-muted')}>
           <p>{t('ecran.alerte.depuis')}: {elapsedStr}</p>
           {demandeur && <p className="mt-0.5">{t('ecran.alerte.demande')}: {demandeur.nom}</p>}
         </div>
@@ -294,8 +294,8 @@ function SettingsPanel({ onClose }: { onClose: () => void }) {
   return (
     <div className="absolute right-0 top-10 z-50 w-[min(320px,calc(100vw-2rem))] rounded-xl border border-brand/20 bg-cream shadow-lg">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-brand/10 px-4 py-3">
-        <span className="text-sm font-semibold text-ink-heading">{t('ecran.settings.titre')}</span>
+      <div className="flex items-center justify-between border-b border-brand/10 px-4 py-3.5">
+        <span className="text-base font-semibold text-ink-heading">{t('ecran.settings.titre')}</span>
         <button onClick={onClose} className="text-ink-muted hover:text-ink">
           <X size={16} />
         </button>
@@ -305,10 +305,10 @@ function SettingsPanel({ onClose }: { onClose: () => void }) {
         {/* Push notifications */}
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-ink">
+            <p className="text-base font-medium text-ink">
               {t('ecran.settings.notifications')}
             </p>
-            <p className={cn('text-xs', pushState === 'error' ? 'text-danger truncate' : 'text-ink-muted')}>
+            <p className={cn('text-sm', pushState === 'error' ? 'text-danger truncate' : 'text-ink-muted')}>
               {pushState === 'enabled'
                 ? t('mobile.push.enabled')
                 : pushState === 'denied'
