@@ -110,7 +110,7 @@ function AlerteCard({
   const isExpiree = alerte.statut === 'expiree'
   const isAcquittee = alerte.statut === 'acquittee'
   const isClosed = alerte.statut === 'cloturee'
-  const isActionable = isOpen || isExpiree || isAcquittee
+
 
   const handleAck = async () => {
     setAcking(true)

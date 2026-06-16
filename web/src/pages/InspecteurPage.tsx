@@ -591,7 +591,7 @@ function PendingScreen({ alerte, onAcked, onExpired, onNouveau }: {
       </p>
       <Countdown createdAt={alerte.created_at} />
       <div className="w-full max-w-xs pt-2">
-        <BigBtn variant="secondary" onClick={onNouveau}>Nouveau contrôle</BigBtn>
+        <BigBtn variant="ghost" onClick={onNouveau}>Nouveau contrôle</BigBtn>
       </div>
     </div>
   )
