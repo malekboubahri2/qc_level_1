@@ -34,7 +34,12 @@ def _key_path() -> Path:
 
 
 def _load_or_generate_keys() -> tuple[str, str]:
-    """Return (private_key_pem, public_key_b64url). Generate + persist if absent."""
+    """Return (private_key_b64url, public_key_b64url). Generate + persist if absent.
+
+    Keys are stored as raw base64url-encoded bytes (no PEM) — the format that
+    py_vapid/pywebpush accept natively on all platforms including Apple Web Push.
+    Private key = 32-byte EC scalar; public key = 65-byte uncompressed X9.62 point.
+    """
     path = _key_path()
     if path.exists():
         data = json.loads(path.read_text())
@@ -45,20 +50,20 @@ def _load_or_generate_keys() -> tuple[str, str]:
     import base64
 
     key = ec.generate_private_key(ec.SECP256R1())
-    priv_pem = key.private_bytes(
-        serialization.Encoding.PEM,
-        serialization.PrivateFormat.TraditionalOpenSSL,
-        serialization.NoEncryption(),
-    ).decode()
+
+    # Raw 32-byte private scalar — avoids PEM/ASN.1 parsing issues in pywebpush.
+    priv_bytes = key.private_numbers().private_value.to_bytes(32, "big")
+    priv_b64 = base64.urlsafe_b64encode(priv_bytes).rstrip(b"=").decode()
+
     pub_raw = key.public_key().public_bytes(
         serialization.Encoding.X962,
         serialization.PublicFormat.UncompressedPoint,
     )
     pub_b64 = base64.urlsafe_b64encode(pub_raw).rstrip(b"=").decode()
 
-    path.write_text(json.dumps({"private_key": priv_pem, "public_key": pub_b64}))
+    path.write_text(json.dumps({"private_key": priv_b64, "public_key": pub_b64}))
     logger.info("push: generated new VAPID keys → %s", path)
-    return priv_pem, pub_b64
+    return priv_b64, pub_b64
 
 
 _private_key: str | None = None
