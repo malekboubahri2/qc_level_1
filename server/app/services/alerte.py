@@ -11,7 +11,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import Alerte, Decision, Utilisateur
+from ..models import Alerte, Decision, Produit, Utilisateur
 from ..models.enums import StatutAlerte
 from ..schemas.alerte import AlerteCreate, AlerteRead, DecisionCreate, DecisionRead
 from .sse import broker
@@ -59,11 +59,13 @@ def create_alerte(
 
     # Best-effort push to the target responsable (online-only, best-effort).
     from . import push as push_svc
+    produit = db.get(Produit, alerte.produit_id) if alerte.produit_id else None
     push_svc.notify_user(db, alerte.responsable_cible_id, {
         "type": "alerte.created",
         "alerte_id": alerte.id,
         "num_chariot": alerte.num_chariot,
         "severite": alerte.severite.value,
+        "produit_ref": produit.reference if produit else None,
     })
 
     return _load_alerte(db, alerte)
@@ -188,10 +190,13 @@ def expire_due(db: Session, timeout_seconds: int) -> int:
             "responsable_cible_id": alerte.responsable_cible_id,
         })
         # Escalation push to ALL methode users on expiry.
+        produit = db.get(Produit, alerte.produit_id) if alerte.produit_id else None
         push_svc.notify_all_methode(db, {
             "type": "alerte.expired",
             "alerte_id": alerte.id,
             "num_chariot": alerte.num_chariot,
+            "severite": alerte.severite.value,
+            "produit_ref": produit.reference if produit else None,
         })
         count += 1
 
