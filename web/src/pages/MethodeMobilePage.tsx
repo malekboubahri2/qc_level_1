@@ -1,10 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { AppLayout } from '../components/AppLayout'
 import { api } from '../lib/api'
 import { t } from '../lib/i18n'
 import { useAuth } from '../lib/auth'
 import type { AlerteRead } from '../lib/api'
+
+// ── PWA install prompt ────────────────────────────────────────────────────────
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>
+  readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
 
 // ── Push subscription helpers ────────────────────────────────────────────────
 
@@ -121,6 +128,9 @@ function MobileAlerteCard({ alerte }: { alerte: AlerteRead }) {
 export function MethodeMobilePage() {
   const { user } = useAuth()
   const [pushState, setPushState] = useState<'idle' | 'loading' | 'enabled' | 'denied'>('idle')
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [installed, setInstalled] = useState(false)
+  const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null)
 
   const { data: alertes = [], isLoading } = useQuery({
     queryKey: ['alertes'],
@@ -132,10 +142,32 @@ export function MethodeMobilePage() {
     a => a.responsable_cible_id === user?.id && a.statut !== 'expiree',
   )
 
+  // Push state from browser permission
   useEffect(() => {
     if (!('Notification' in window)) return
     if (Notification.permission === 'granted') setPushState('enabled')
     else if (Notification.permission === 'denied') setPushState('denied')
+  }, [])
+
+  // PWA install prompt
+  useEffect(() => {
+    // Already installed (standalone display mode)
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setInstalled(true)
+      return
+    }
+    const handler = (e: Event) => {
+      e.preventDefault()
+      deferredPrompt.current = e as BeforeInstallPromptEvent
+      setInstallPrompt(e as BeforeInstallPromptEvent)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    window.addEventListener('appinstalled', () => {
+      setInstalled(true)
+      setInstallPrompt(null)
+      deferredPrompt.current = null
+    })
+    return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
   const handleEnablePush = async () => {
@@ -153,48 +185,74 @@ export function MethodeMobilePage() {
     }
   }
 
+  const handleInstall = async () => {
+    if (!deferredPrompt.current) return
+    await deferredPrompt.current.prompt()
+    const { outcome } = await deferredPrompt.current.userChoice
+    if (outcome === 'accepted') {
+      setInstalled(true)
+      setInstallPrompt(null)
+      deferredPrompt.current = null
+    }
+  }
+
   return (
     <AppLayout title={t('mobile.titre')}>
-    <div className="space-y-4 max-w-lg mx-auto">
+      <div className="space-y-4 max-w-lg mx-auto">
 
-      {/* Push toggle */}
-      <div className="rounded-lg border border-border bg-card p-3 flex items-center justify-between gap-3">
-        <span className="text-sm font-medium">
-          {pushState === 'enabled'
-            ? t('mobile.push.enabled')
-            : pushState === 'denied'
-              ? t('mobile.push.denied')
-              : t('mobile.push.enable')}
-        </span>
-        {pushState === 'idle' && (
-          <button
-            className="btn-primary text-sm px-3 py-1.5 rounded"
-            onClick={handleEnablePush}
-          >
-            Activer
-          </button>
+        {/* PWA install banner — shown when browser offers install and app not yet installed */}
+        {installPrompt && !installed && (
+          <div className="rounded-lg border border-brand bg-brand/10 p-3 flex items-center justify-between gap-3">
+            <span className="text-sm font-medium text-brand">
+              {t('mobile.install.prompt')}
+            </span>
+            <button
+              className="btn-primary text-sm px-3 py-1.5 rounded shrink-0"
+              onClick={handleInstall}
+            >
+              {t('mobile.install.button')}
+            </button>
+          </div>
         )}
-        {pushState === 'loading' && (
-          <span className="text-sm text-muted">{t('mobile.push.loading')}</span>
-        )}
-        {pushState === 'enabled' && (
-          <span className="text-green-600 text-lg">✓</span>
+
+        {/* Push toggle */}
+        <div className="rounded-lg border border-border bg-card p-3 flex items-center justify-between gap-3">
+          <span className="text-sm font-medium">
+            {pushState === 'enabled'
+              ? t('mobile.push.enabled')
+              : pushState === 'denied'
+                ? t('mobile.push.denied')
+                : t('mobile.push.enable')}
+          </span>
+          {pushState === 'idle' && (
+            <button
+              className="btn-primary text-sm px-3 py-1.5 rounded shrink-0"
+              onClick={handleEnablePush}
+            >
+              Activer
+            </button>
+          )}
+          {pushState === 'loading' && (
+            <span className="text-sm text-muted">{t('mobile.push.loading')}</span>
+          )}
+          {pushState === 'enabled' && (
+            <span className="text-green-600 text-lg font-bold">✓</span>
+          )}
+        </div>
+
+        {/* Alert list */}
+        {isLoading ? (
+          <p className="text-sm text-muted">{t('common.loading')}</p>
+        ) : myAlertes.length === 0 ? (
+          <p className="text-sm text-muted text-center py-8">{t('mobile.noAlertes')}</p>
+        ) : (
+          <div className="space-y-3">
+            {myAlertes.map(a => (
+              <MobileAlerteCard key={a.id} alerte={a} />
+            ))}
+          </div>
         )}
       </div>
-
-      {/* Alert list */}
-      {isLoading ? (
-        <p className="text-sm text-muted">{t('common.loading')}</p>
-      ) : myAlertes.length === 0 ? (
-        <p className="text-sm text-muted text-center py-8">{t('mobile.noAlertes')}</p>
-      ) : (
-        <div className="space-y-3">
-          {myAlertes.map(a => (
-            <MobileAlerteCard key={a.id} alerte={a} />
-          ))}
-        </div>
-      )}
-    </div>
     </AppLayout>
   )
 }

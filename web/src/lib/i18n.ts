@@ -92,11 +92,14 @@ const resources: Record<Locale, Record<string, string>> = {
 
     // Mobile méthode
     'mobile.titre': 'Alertes — Méthode',
-    'mobile.push.enable': 'Activer les notifications push',
+    'mobile.push.enable': 'Activer les notifications',
     'mobile.push.enabled': 'Notifications activées',
     'mobile.push.denied': 'Notifications refusées par le navigateur',
     'mobile.push.loading': 'Activation…',
     'mobile.noAlertes': 'Aucune alerte en cours',
+    'mobile.install.prompt': 'Installer l\'app pour recevoir les alertes hors connexion',
+    'mobile.install.button': 'Installer',
+    'mobile.install.done': 'App installée',
 
     // KPIs
     'kpis.titre': 'Indicateurs qualité',
