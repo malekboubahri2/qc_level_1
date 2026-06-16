@@ -64,13 +64,11 @@ self.addEventListener('push', (event) => {
 
   if (data.type === 'alerte.created') {
     const sev = data.severite === 'urgente' ? '🔴 URGENTE' : '🟡 Normale'
-    const produit = data.produit_ref ? ` · ${data.produit_ref}` : ''
-    title = `⚠️ Chariot ${data.num_chariot}${produit}`
+    title = `⚠️ ${data.produit_ref ?? 'Alerte'}`
     body = sev
   } else if (data.type === 'alerte.expired') {
     const sev = data.severite === 'urgente' ? ' 🔴' : ''
-    const produit = data.produit_ref ? ` · ${data.produit_ref}` : ''
-    title = `⏰ Chariot ${data.num_chariot}${produit} — Expirée${sev}`
+    title = `🔔 Rappel — ${data.produit_ref ?? 'Alerte'}${sev}`
     body = "Pas d'acquittement — alerter manuellement"
   }
 
