@@ -138,7 +138,7 @@ describe('subscribeToPush', () => {
     })
     // Attach rejection handler BEFORE advancing timers so rejection is never unhandled.
     const assertion = expect(subscribeToPush()).rejects.toThrow('service worker')
-    await vi.advanceTimersByTimeAsync(9_000)
+    await vi.advanceTimersByTimeAsync(31_000)
     await assertion
   })
 

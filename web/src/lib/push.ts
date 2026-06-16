@@ -26,7 +26,7 @@ export async function subscribeToPush(): Promise<void> {
     throw new Error('Push non supporté par ce navigateur')
   }
 
-  const reg = await withTimeout(navigator.serviceWorker.ready, 8_000, 'service worker')
+  const reg = await withTimeout(navigator.serviceWorker.ready, 30_000, 'service worker')
   const { public_key } = await api.push.vapidPublicKey()
   const keyBytes = urlBase64ToUint8Array(public_key)
 

@@ -15,7 +15,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then(cache => cache.addAll(WB_MANIFEST.map(e => e.url)))
+      // Best-effort: a slow/failed cache must not block SW activation.
+      .then(cache => cache.addAll(WB_MANIFEST.map(e => e.url)).catch(() => {}))
       .then(() => self.skipWaiting()),
   )
 })
