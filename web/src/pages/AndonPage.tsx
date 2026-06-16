@@ -8,19 +8,12 @@ import { api, type AlerteRead, type SuiviRead, type SymptomeRead } from '../lib/
 import { useAndonSSE, playAndonChime } from '../lib/sse'
 import { t } from '../lib/i18n'
 import { cn } from '../lib/cn'
+import { fmtElapsed } from '../lib/date'
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
 function todayISO(): string {
   return new Date().toLocaleDateString('en-CA') // YYYY-MM-DD in local tz
-}
-
-function fmtAge(iso: string): string {
-  const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (secs < 60) return `${secs}s`
-  const mins = Math.floor(secs / 60)
-  if (mins < 60) return `${mins} min`
-  return `${Math.floor(mins / 60)} h ${mins % 60} min`
 }
 
 function fmtClock(d: Date): string {
@@ -153,7 +146,7 @@ interface PendingPanelProps {
 
 function PendingPanel({ alertes, userNames, produitRefs, className }: PendingPanelProps) {
   const pending = alertes
-    .filter((a) => a.statut === 'ouverte' || a.statut === 'acquittee')
+    .filter((a) => a.statut === 'ouverte' || a.statut === 'acquittee' || a.statut === 'expiree')
     .sort((a, b) => {
       if (a.severite !== b.severite) return a.severite === 'urgente' ? -1 : 1
       return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -222,7 +215,7 @@ function PendingPanel({ alertes, userNames, produitRefs, className }: PendingPan
                   className="text-ink-muted/70"
                   style={{ fontSize: 'clamp(0.65rem, 1vw, 0.8rem)' }}
                 >
-                  {t('andon.pending.depuis')}&nbsp;{fmtAge(a.created_at)}
+                  {t('andon.pending.depuis')}&nbsp;{fmtElapsed(a.created_at)}
                 </p>
               </li>
             )
@@ -373,7 +366,8 @@ export function AndonPage() {
   })
 
   const userNames = new Map(users.map((u) => [u.id, u.nom]))
-  const produitRefs = new Map(produits.map((p) => [p.id, p.reference]))
+  // Prefer libelle (human-readable) over reference code for all display
+  const produitLabels = new Map(produits.map((p) => [p.id, p.libelle || p.reference]))
   const symptomesMap = new Map(symptomes.map((s) => [s.id, s]))
 
   return (
@@ -384,7 +378,7 @@ export function AndonPage() {
           alerte={currentOverlay}
           onDismiss={dismissOverlay}
           userNames={userNames}
-          produitRefs={produitRefs}
+          produitRefs={produitLabels}
         />
       )}
 
@@ -429,14 +423,14 @@ export function AndonPage() {
           suivis={suivis}
           newIds={newSuiviIds}
           symptomesMap={symptomesMap}
-          className="flex-[3] min-w-0"
+          className="flex-3 min-w-0"
         />
         <div className="w-px bg-cream-subtle shrink-0" />
         <PendingPanel
           alertes={alertes}
           userNames={userNames}
-          produitRefs={produitRefs}
-          className="flex-[1] min-w-[220px] max-w-xs"
+          produitRefs={produitLabels}
+          className="flex-1 min-w-55 max-w-xs"
         />
       </div>
     </div>

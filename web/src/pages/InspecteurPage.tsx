@@ -28,6 +28,7 @@ import { useConnectivity } from '../lib/connectivity'
 import { t } from '../lib/i18n'
 import { clearSyncedSuivis, getPendingSuivis, queueSuivi } from '../lib/idb'
 import { cn } from '../lib/cn'
+import { parseServerDate } from '../lib/date'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -539,7 +540,7 @@ function AlerteSeveriteScreen({ value, onPick, onBack, sending }: {
 
 function Countdown({ createdAt, timeoutSecs = 120 }: { createdAt: string; timeoutSecs?: number }) {
   const [left, setLeft] = useState(() => {
-    const elapsed = (Date.now() - new Date(createdAt).getTime()) / 1000
+    const elapsed = (Date.now() - parseServerDate(createdAt).getTime()) / 1000
     return Math.max(0, timeoutSecs - Math.floor(elapsed))
   })
   useEffect(() => {
@@ -589,9 +590,9 @@ function PendingScreen({ alerte, onAcked, onExpired, onNouveau }: {
         </span>
       </p>
       <Countdown createdAt={alerte.created_at} />
-      <button onClick={onNouveau} className="text-ink-muted text-sm underline mt-4">
-        Nouveau contrôle
-      </button>
+      <div className="w-full max-w-xs pt-2">
+        <BigBtn variant="secondary" onClick={onNouveau}>Nouveau contrôle</BigBtn>
+      </div>
     </div>
   )
 }

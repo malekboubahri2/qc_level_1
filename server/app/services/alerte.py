@@ -66,6 +66,7 @@ def create_alerte(
         "num_chariot": alerte.num_chariot,
         "severite": alerte.severite.value,
         "produit_ref": produit.reference if produit else None,
+        "produit_libelle": produit.libelle if produit else None,
     })
 
     return _load_alerte(db, alerte)
@@ -106,7 +107,7 @@ def ack_alerte(db: Session, alerte_id: int, user: Utilisateur) -> AlerteRead:
     alerte = db.get(Alerte, alerte_id)
     if alerte is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Alerte introuvable")
-    if alerte.statut != StatutAlerte.ouverte:
+    if alerte.statut not in (StatutAlerte.ouverte, StatutAlerte.expiree):
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             f"Impossible d'acquitter une alerte en statut '{alerte.statut.value}'",
@@ -132,7 +133,7 @@ def record_decision(
     alerte = db.get(Alerte, alerte_id)
     if alerte is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Alerte introuvable")
-    if alerte.statut not in (StatutAlerte.ouverte, StatutAlerte.acquittee):
+    if alerte.statut not in (StatutAlerte.ouverte, StatutAlerte.acquittee, StatutAlerte.expiree):
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             f"Impossible d'enregistrer une décision sur une alerte '{alerte.statut.value}'",
@@ -197,6 +198,7 @@ def expire_due(db: Session, timeout_seconds: int) -> int:
             "num_chariot": alerte.num_chariot,
             "severite": alerte.severite.value,
             "produit_ref": produit.reference if produit else None,
+            "produit_libelle": produit.libelle if produit else None,
         })
         count += 1
 

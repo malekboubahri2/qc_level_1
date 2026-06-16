@@ -68,19 +68,21 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('push', (event) => {
   if (!event.data) return
-  let data: { type?: string; alerte_id?: number; num_chariot?: string; severite?: string; produit_ref?: string }
+  let data: { type?: string; alerte_id?: number; num_chariot?: string; severite?: string; produit_ref?: string; produit_libelle?: string }
   try { data = event.data.json() } catch { return }
+
+  const produitLabel = data.produit_libelle ?? data.produit_ref ?? 'Alerte'
 
   let title = 'QC Niveau 1'
   let body = ''
 
   if (data.type === 'alerte.created') {
     const sev = data.severite === 'urgente' ? '🔴 URGENTE' : '🟡 Normale'
-    title = `⚠️ ${data.produit_ref ?? 'Alerte'}`
+    title = `⚠️ ${produitLabel}`
     body = sev
   } else if (data.type === 'alerte.expired') {
     const sev = data.severite === 'urgente' ? ' 🔴' : ''
-    title = `🔔 Rappel — ${data.produit_ref ?? 'Alerte'}${sev}`
+    title = `🔔 Rappel — ${produitLabel}${sev}`
     body = "Pas d'acquittement — alerter manuellement"
   }
 

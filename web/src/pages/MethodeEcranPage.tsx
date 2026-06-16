@@ -17,6 +17,7 @@ import { useAuth } from '../lib/auth'
 import { t } from '../lib/i18n'
 import { useAlertesSSE, playAlarm } from '../lib/sse'
 import { cn } from '../lib/cn'
+import { fmtElapsed } from '../lib/date'
 import { subscribeToPush, hasPushSubscription, initialPushState, type BeforeInstallPromptEvent } from '../lib/push'
 
 // ── Decision form ────────────────────────────────────────────────────────────
@@ -102,14 +103,14 @@ function AlerteCard({
   const produit = produits.find((p) => p.id === alerte.produit_id)
   const demandeur = utilisateurs.find((u) => u.id === alerte.demandeur_id)
 
-  const elapsed = Math.floor((Date.now() - new Date(alerte.created_at).getTime()) / 1000)
-  const elapsedStr =
-    elapsed < 60 ? `${elapsed}s` : `${Math.floor(elapsed / 60)}min ${elapsed % 60}s`
+  const elapsedStr = fmtElapsed(alerte.created_at)
 
   const isUrgent = alerte.severite === 'urgente'
   const isOpen = alerte.statut === 'ouverte'
+  const isExpiree = alerte.statut === 'expiree'
   const isAcquittee = alerte.statut === 'acquittee'
-  const isClosed = alerte.statut === 'cloturee' || alerte.statut === 'expiree'
+  const isClosed = alerte.statut === 'cloturee'
+  const isActionable = isOpen || isExpiree || isAcquittee
 
   const handleAck = async () => {
     setAcking(true)
@@ -123,11 +124,11 @@ function AlerteCard({
 
   // Tone badge
   const statusTone =
-    alerte.statut === 'cloturee'
+    isClosed
       ? 'success'
-      : alerte.statut === 'expiree'
-        ? 'danger'
-        : alerte.statut === 'acquittee'
+      : isExpiree
+        ? 'warning'
+        : isAcquittee
           ? 'warning'
           : isUrgent
             ? 'danger'
@@ -141,6 +142,7 @@ function AlerteCard({
         isOpen && isUrgent && 'animate-pulse border-danger bg-danger text-cream',
         isOpen && !isUrgent && 'border-warning bg-warning/10',
         isAcquittee && 'border-brand bg-brand/5',
+        isExpiree && 'border-warning/60 bg-warning/5',
         isClosed && 'border-cream-subtle bg-cream/50 opacity-75',
       )}
     >
@@ -156,15 +158,15 @@ function AlerteCard({
                 isOpen && isUrgent ? 'text-cream' : 'text-ink-heading',
               )}
             >
-              {produit ? produit.reference : `Produit #${alerte.produit_id}`}
+              {produit ? (produit.libelle || produit.reference) : `Produit #${alerte.produit_id}`}
             </span>
             <StatusBadge tone={statusTone}>
               {t(`ecran.statut.${alerte.statut}`)}
             </StatusBadge>
           </div>
-          {produit && (
+          {produit?.reference && (
             <p className={cn('text-base truncate', isOpen && isUrgent ? 'text-cream/80' : 'text-ink-muted')}>
-              {produit.libelle}
+              {produit.reference}
             </p>
           )}
           <p className={cn('text-sm', isOpen && isUrgent ? 'text-cream/70' : 'text-ink-muted')}>
@@ -177,8 +179,8 @@ function AlerteCard({
         </div>
       </div>
 
-      {/* ACK button — only for methode users on open alertes */}
-      {isOpen && (user?.role === 'methode' || user?.role === 'admin') && (
+      {/* ACK button — for methode users on open or expired alertes */}
+      {(isOpen || isExpiree) && (user?.role === 'methode' || user?.role === 'admin') && (
         <Button
           variant="primary"
           size="lg"
@@ -193,8 +195,8 @@ function AlerteCard({
         </Button>
       )}
 
-      {/* Decision form — appears after ACK or on acquittee alertes */}
-      {isAcquittee && (showDecision || alerte.statut === 'acquittee') && (
+      {/* Decision form — after ACK, on acquittee, or directly on expired alertes */}
+      {(isAcquittee || isExpiree) && (showDecision || isAcquittee || isExpiree) && (
         <DecisionForm
           alerteId={alerte.id}
           onClosed={() => setShowDecision(false)}
